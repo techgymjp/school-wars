@@ -451,7 +451,7 @@ const sfx = {
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.08, t + 0.02); g.gain.setValueAtTime(0.08, t + 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
     o.connect(g); g.connect(master); o.start(t); l.start(t); o.stop(t + 0.45); l.stop(t + 0.45);
   },
-  horn() { // ミュージックホーン「パラリラパラリラ〜」
+  horn() { // ミュージックホーン
     if (!AC || muted) return;
     // エアホーンらしい割れた金属音：のこぎり波を歪ませ、ラッパの共鳴帯域を持ち上げる
     const t0 = AC.currentTime + 0.02;
@@ -464,13 +464,15 @@ const sfx = {
     const lo = AC.createBiquadFilter(); lo.type = 'highpass'; lo.frequency.value = 280;
     const out = AC.createGain(); out.gain.value = 0.16;
     shaper.connect(body); body.connect(hi); hi.connect(lo); lo.connect(out); out.connect(master);
-    // 各ラッパは決まった音程。パ・ラ・リ・ラ を2回、最後は長く伸ばす
-    const C5 = 523.25, E5 = 659.25, G5 = 783.99, C6 = 1046.5;
-    const seq = [C5, E5, G5, E5, C5, E5, G5, E5, C6];
-    const step = 0.14;
-    seq.forEach((f, i) => {
-      const t = t0 + i * step;
-      const dur = i === seq.length - 1 ? 0.75 : step + 0.03;
+    // ゴッドファーザー「愛のテーマ」の出だし（ハ短調）。[周波数, 拍数]
+    const G4 = 392.0, Ab4 = 415.3, Bb4 = 466.16, C5 = 523.25, D5 = 587.33, Eb5 = 622.25;
+    const seq = [[G4, 1], [C5, 1], [Eb5, 1], [D5, 3], [C5, 1], [Eb5, 1], [C5, 1], [D5, 1], [C5, 1], [Ab4, 1], [Bb4, 1], [G4, 4]];
+    const beat = 0.17;
+    let at = 0;
+    seq.forEach(([f, n], i) => {
+      const t = t0 + at * beat;
+      at += n;
+      const dur = n * beat + (i === seq.length - 1 ? 0.1 : 0.03);
       const g = AC.createGain();
       g.gain.setValueAtTime(0.0001, t);
       g.gain.exponentialRampToValueAtTime(0.5, t + 0.018);
@@ -769,7 +771,7 @@ function updateBike(dt) {
   if (keys.horn && hornCD <= 0) honk();
 }
 function honk() {
-  hornCD = 3;
+  hornCD = 3.5;
   sfx.horn();
   popup(bike.x - 30, bike.y - 130, 'パラリラ〜♪', '#e0333d', 22, 1.1);
   for (const e of ents) {
@@ -1331,7 +1333,7 @@ function drawHUD() {
   ctx.fillRect(104, H - 32, sw * sv, 10);
   if (bike.stun > 0) { ctx.fillStyle = '#f2c14e'; ctx.font = `10px ${FONT_DOT}`; ctx.fillText('減速中', 104, H - 36); }
   // パラリラの溜まり具合
-  const hk = clamp(1 - hornCD / 3, 0, 1);
+  const hk = clamp(1 - hornCD / 3.5, 0, 1);
   ctx.fillStyle = 'rgba(12,12,18,.8)'; ctx.fillRect(268, H - 46, 92, 38);
   ctx.fillStyle = hk >= 1 ? '#e0333d' : '#5a5b70'; ctx.font = `12px ${FONT_DOT}`; ctx.fillText('パラリラ', 278, H - 30);
   ctx.fillStyle = '#34354a'; ctx.fillRect(278, H - 22, 72, 5);
