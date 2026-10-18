@@ -217,8 +217,100 @@ button.big:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; 
   #touch button { width: 56px; height: 56px; font-size: 14px; }
   #touch button[data-k="swing"] { width: 68px; height: 68px; }
 }
+.touch-help { display: none; font-family: var(--f-dot); font-size: 13px; color: var(--muted); margin: 0; }
+.coarse .keys { display: none; }
+.coarse .touch-help { display: block; }
+
+/* スマホ縦持ち：横向きにするよう促す */
+#rotate {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  text-align: center;
+  background: var(--ink);
+  padding-block: 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.portrait-block #rotate { display: flex; }
+#rotate .phone {
+  width: 46px; height: 78px;
+  border: 4px solid var(--paper);
+  border-radius: 9px;
+  position: relative;
+  animation: tilt 2.4s ease-in-out infinite;
+}
+#rotate .phone::after { content: ""; position: absolute; left: 50%; bottom: 5px; width: 10px; height: 3px; margin-left: -5px; border-radius: 2px; background: var(--paper); }
+@keyframes tilt { 0%, 25% { transform: rotate(0); } 55%, 100% { transform: rotate(-90deg); } }
+#rotate h2 { font-family: var(--f-display); font-weight: 400; font-size: 26px; margin: 0; color: var(--paper); text-shadow: 2px 2px 0 var(--red); }
+#rotate p { margin: 0; color: var(--muted); max-width: 22em; }
+#rotate .actions { justify-content: center; margin-top: 4px; }
+
+/* スマホ横持ち：画面いっぱいにゲーム、両脇にボタン */
+@media (orientation: landscape) and (max-height: 520px) {
+  .coarse body { overflow: hidden; }
+  .coarse #app {
+    height: 100%;
+    min-height: 0;
+    gap: 0;
+    padding-block: 0;
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  .coarse #stage {
+    width: min(100%, calc(100vh * 16 / 9));
+    width: min(100%, calc(100dvh * 16 / 9));
+    max-width: none;
+    overflow: hidden;
+    border: 0;
+    border-radius: 0;
+  }
+  .coarse #game { border: 0; }
+  .coarse .foot { display: none; }
+  .coarse .overlay { position: absolute; background: rgba(10,10,16,.9); align-items: flex-start; }
+  .coarse .card { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 8px 18px; padding: 12px 16px; font-size: 13px; line-height: 1.5; }
+  .coarse h1 { font-size: 34px; margin: 2px 0; }
+  .coarse .tagline { font-size: 15px; margin-top: 4px; }
+  .coarse .lead { display: none; }
+  .coarse .eyebrow { font-size: 11px; }
+  .coarse .actions { margin-top: 10px; }
+  .coarse button.big { font-size: 17px; padding: 8px 20px; }
+  .coarse .rules { gap: 4px; }
+  .coarse .rules li { padding: 4px 8px; }
+  .coarse .board h2, .coarse .stats h2 { font-size: 15px; margin-bottom: 4px; }
+  .coarse .result-head { font-size: 44px; }
+  .coarse .rank { font-size: 20px; margin-top: 8px; }
+  .coarse .stats .total { font-size: 16px; }
+  .coarse #mute { top: 6px; bottom: auto; right: auto; left: 50%; transform: translateX(-50%); }
+  .coarse #touch {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    max-width: none;
+    align-items: flex-end;
+    pointer-events: none;
+    box-sizing: border-box;
+    padding-left: calc(env(safe-area-inset-left, 0px) + 8px);
+    padding-right: calc(env(safe-area-inset-right, 0px) + 8px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+  }
+  .coarse.in-menu #touch { display: none; }
+  .coarse #touch .grp { pointer-events: auto; }
+  .coarse #touch .grp:first-child { flex-direction: column; margin-bottom: 44px; }
+  .coarse #touch .grp:last-child { display: grid; grid-template-columns: repeat(2, auto); }
+  .coarse #touch button,
+  .coarse #touch button[data-k="swing"] { width: 58px; height: 58px; font-size: 15px; background: rgba(25,26,36,.72); }
+  .coarse #touch button[data-k="horn"] { font-size: 11px; }
+  .coarse #touch button.on { background: var(--red); }
+}
 @media (prefers-reduced-motion: reduce) {
   button.big:active { transform: none; }
+  #rotate .phone { animation: none; transform: rotate(-90deg); }
 }
 </style>
 </head>
@@ -250,6 +342,7 @@ button.big:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; 
             <kbd>Space</kbd> 木刀を振る（壁ぎわで窓が割れる）<br>
             <kbd>X</kbd> パラリラ（生徒がよける）　<kbd>M</kbd> 音のオンオフ
           </p>
+          <p class="touch-help">左の ▲▼ で廊下の奥／手前へ。右の「振る」で窓を割り、「速」で加速、「止」でブレーキ、「パラリラ」で生徒をどかす。</p>
           <div class="board" id="boardTitle"></div>
         </div>
       </div>
@@ -287,6 +380,15 @@ button.big:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; 
       <button type="button" data-k="swing">振る</button>
     </div>
   </div>
+  <div id="rotate" role="dialog" aria-label="横向きのおすすめ">
+    <div class="phone" aria-hidden="true"></div>
+    <h2>スマホを横にしてください</h2>
+    <p>廊下爆走伝は横画面で遊ぶゲームです。画面の向きのロックを外して、横向きにしてください。</p>
+    <div class="actions">
+      <button id="landBtn" class="big" type="button">全画面で横にする</button>
+      <button id="portraitOk" class="ghost" type="button">縦のまま遊ぶ</button>
+    </div>
+  </div>
   <p class="foot">ドラマ「スクール☆ウォーズ」の名場面をモチーフにしたファンメイドのゲームです。現実の廊下では走らないでください。</p>
 </div>
 
@@ -313,7 +415,31 @@ const ctx = cv.getContext('2d');
 const DPR = Math.min(2, window.devicePixelRatio || 1);
 cv.width = W * DPR; cv.height = H * DPR;
 
-if (window.matchMedia && matchMedia('(pointer: coarse)').matches) document.documentElement.classList.add('coarse');
+const root = document.documentElement;
+const COARSE = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+if (COARSE) root.classList.add('coarse');
+root.classList.add('in-menu');
+
+// ---------- スマホの向き ----------
+const mqPortrait = window.matchMedia ? matchMedia('(orientation: portrait)') : null;
+let allowPortrait = false;
+function syncOrient() {
+  const block = COARSE && !!mqPortrait && mqPortrait.matches && !allowPortrait;
+  root.classList.toggle('portrait-block', block);
+  if (block) for (const k in keys) keys[k] = false;
+}
+function isBlocked() { return root.classList.contains('portrait-block'); }
+// 全画面にできる端末（主に Android）では全画面＋横向き固定を試す。できなければ何もしない
+function goLandscape() {
+  if (!COARSE) return;
+  try {
+    const lock = () => { try { const p = screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape'); if (p && p.catch) p.catch(() => {}); } catch (e) {} };
+    if (!document.fullscreenElement && root.requestFullscreen) {
+      const p = root.requestFullscreen({ navigationUI: 'hide' });
+      if (p && p.then) p.then(lock).catch(() => {});
+    } else lock();
+  } catch (e) {}
+}
 
 // ---------- 乱数 ----------
 function mulberry32(a) {
@@ -335,6 +461,14 @@ let bike, camX = 0, runT = 0, countdown = 0, shake = 0, clock = 0;
 let glass = 0, glassScore = 0, combo = 0, maxCombo = 0, lastBreak = -9, teacherHits = 0;
 let crashT = 0, finishT = 0, resultShown = false, hornCD = 0, resultReadyAt = 0;
 const keys = { up: false, down: false, accel: false, brake: false, swing: false, horn: false };
+if (mqPortrait) {
+  if (mqPortrait.addEventListener) mqPortrait.addEventListener('change', syncOrient);
+  else if (mqPortrait.addListener) mqPortrait.addListener(syncOrient);
+}
+addEventListener('resize', syncOrient);
+document.getElementById('portraitOk').addEventListener('click', () => { allowPortrait = true; syncOrient(); });
+document.getElementById('landBtn').addEventListener('click', goLandscape);
+syncOrient();
 
 function newBike() {
   return { x: 160, y: 330, v: 0, vy: 0, stun: 0, swingT: 0, swingCD: 0, swingSide: 0, wheel: 0, rot: 0, flap: 0 };
@@ -534,7 +668,10 @@ document.getElementById('againBtn').addEventListener('click', startGame);
 document.getElementById('backBtn').addEventListener('click', toTitle);
 
 function startGame() {
+  if (isBlocked()) return;
   initAudio();
+  goLandscape();
+  root.classList.remove('in-menu');
   buildCourse(true);
   bike = newBike();
   parts = []; pops = [];
@@ -548,6 +685,7 @@ function startGame() {
 }
 function toTitle() {
   state = 'title';
+  root.classList.add('in-menu');
   elResult.hidden = true; elTitle.hidden = false;
   renderBoard(document.getElementById('boardTitle'), -1);
   startDemo();
@@ -623,6 +761,7 @@ function showResult(goal) {
   }
   renderBoard(document.getElementById('boardResult'), newIdx);
   elResult.hidden = false;
+  root.classList.add('in-menu');
   resultReadyAt = performance.now() + 700;
   setTimeout(() => { if (state === 'result') document.getElementById('againBtn').focus({ preventScroll: true }); }, 50);
 }
@@ -1375,7 +1514,7 @@ let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.033, (now - last) / 1000);
   last = now;
-  update(dt);
+  if (!isBlocked()) update(dt);
   render();
   requestAnimationFrame(frame);
 }
