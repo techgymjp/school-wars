@@ -36,8 +36,8 @@
 
 結果画面から X（旧Twitter）へのポスト、LINE で送る、結果のコピーができます（スマホでは「その他」から端末の共有メニューも使えます）。
 
-シェア文に付くURLは、ゲームを公開しているページのURLです。別のURLを付けたいときは `index.html` の `<head>` に次の1行を足してください。
+シェア文に付くURLは `index.html` の `<head>` にある次の行で決まります（現在は紹介記事のページ）。変えたいときはここを書き換えてください。
 
 ```html
-<meta name="share-url" content="https://example.com/school-wars/">
+<meta name="share-url" content="https://techgym.jp/column/claude-code-game-school-wars/">
 ```
