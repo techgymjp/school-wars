@@ -464,14 +464,15 @@ const sfx = {
     const lo = AC.createBiquadFilter(); lo.type = 'highpass'; lo.frequency.value = 280;
     const out = AC.createGain(); out.gain.value = 0.16;
     shaper.connect(body); body.connect(hi); hi.connect(lo); lo.connect(out); out.connect(master);
-    // ゴッドファーザー「愛のテーマ」の出だし（ハ短調）。[周波数, 拍数]
-    const G4 = 392.0, Ab4 = 415.3, Bb4 = 466.16, C5 = 523.25, D5 = 587.33, Eb5 = 622.25;
-    const seq = [[G4, 1], [C5, 1], [Eb5, 1], [D5, 3], [C5, 1], [Eb5, 1], [C5, 1], [D5, 1], [C5, 1], [Ab4, 1], [Bb4, 1], [G4, 4]];
+    // チャルメラ「ソラシー ラソ、ソラシラソラー」。[周波数, 拍数]、周波数 0 は休符
+    const G4 = 392.0, A4 = 440.0, B4 = 493.88;
+    const seq = [[G4, 1], [A4, 1], [B4, 2], [A4, 1], [G4, 2], [0, 1], [G4, 1], [A4, 1], [B4, 1], [A4, 1], [G4, 1], [A4, 4]];
     const beat = 0.17;
     let at = 0;
     seq.forEach(([f, n], i) => {
       const t = t0 + at * beat;
       at += n;
+      if (!f) return;
       const dur = n * beat + (i === seq.length - 1 ? 0.1 : 0.03);
       const g = AC.createGain();
       g.gain.setValueAtTime(0.0001, t);
