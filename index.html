@@ -19,6 +19,8 @@
   --gold: #f2c14e;       /* 金糸 */
   --glass: #9fd3e3;
   --line: #34354a;
+  --x-ink: #000000;
+  --line-green: #06c755;
   --f-display: "Dela Gothic One", "Hiragino Kaku Gothic StdN", "Yu Gothic", sans-serif;
   --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
   --f-dot: "DotGothic16", "MS Gothic", "Osaka-mono", monospace;
@@ -217,6 +219,29 @@ button.big:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; 
   #touch button { width: 56px; height: 56px; font-size: 14px; }
   #touch button[data-k="swing"] { width: 68px; height: 68px; }
 }
+.share { margin-top: 16px; display: grid; gap: 6px; }
+.share-label { font-family: var(--f-dot); font-size: 12px; color: var(--muted); letter-spacing: .14em; }
+.share-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.sbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  box-sizing: border-box;
+  font-family: var(--f-body);
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  color: var(--paper);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  cursor: pointer;
+}
+.sbtn.x { background: var(--x-ink); border-color: #555; }
+.sbtn.line { background: var(--line-green); border-color: var(--line-green); color: #fff; }
+.sbtn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 .touch-help { display: none; font-family: var(--f-dot); font-size: 13px; color: var(--muted); margin: 0; }
 .coarse .keys { display: none; }
 .coarse .touch-help { display: block; }
@@ -286,6 +311,8 @@ button.big:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; 
   .coarse .result-head { font-size: 44px; }
   .coarse .rank { font-size: 20px; margin-top: 8px; }
   .coarse .stats .total { font-size: 16px; }
+  .coarse .share { margin-top: 10px; }
+  .coarse .sbtn { min-height: 36px; padding: 0 10px; font-size: 13px; }
   .coarse #mute { top: 6px; bottom: auto; right: auto; left: 50%; transform: translateX(-50%); }
   .coarse #touch {
     position: fixed;
@@ -358,6 +385,15 @@ button.big:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; 
           <div class="actions">
             <button id="againBtn" class="big" type="button">もう一回</button>
             <button id="backBtn" class="ghost" type="button">タイトルへ</button>
+          </div>
+          <div class="share">
+            <span class="share-label">結果をシェア</span>
+            <div class="share-row">
+              <a id="shareX" class="sbtn x" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener">𝕏 でポスト</a>
+              <a id="shareLine" class="sbtn line" href="https://line.me/R/msg/text/" target="_blank" rel="noopener">LINE で送る</a>
+              <button id="shareCopy" class="sbtn" type="button">結果をコピー</button>
+              <button id="shareNative" class="sbtn" type="button" hidden>その他</button>
+            </div>
           </div>
         </div>
         <div style="display:grid;gap:16px;min-width:0">
@@ -760,11 +796,53 @@ function showResult(goal) {
     rankEl.innerHTML = '<small>称号</small>無期停学';
   }
   renderBoard(document.getElementById('boardResult'), newIdx);
+  setShare(goal
+    ? `【廊下爆走伝】三階廊下を${runT.toFixed(2)}秒で走破！ガラス${glass}枚、合計${total.toLocaleString()}点で称号「${rankOf(total)}」`
+    : `【廊下爆走伝】ガラスを${glass}枚割ったのに、生徒を轢いて失格……称号「無期停学」`);
   elResult.hidden = false;
   root.classList.add('in-menu');
   resultReadyAt = performance.now() + 700;
   setTimeout(() => { if (state === 'result') document.getElementById('againBtn').focus({ preventScroll: true }); }, 50);
 }
+
+// ---------- シェア ----------
+// シェアに付けるURL。<meta name="share-url"> があればそれを使い、なければ公開中のページのURL
+function shareUrl() {
+  const m = document.querySelector('meta[name="share-url"]');
+  if (m && m.content) return m.content;
+  return /^https?:$/.test(location.protocol) ? location.href.split('#')[0] : '';
+}
+let shareText = '';
+const shareCopy = document.getElementById('shareCopy'), shareNative = document.getElementById('shareNative');
+function setShare(text) {
+  const url = shareUrl();
+  const tag = '#廊下爆走伝';
+  shareText = [text, tag, url].filter(Boolean).join(' ');
+  const xq = new URLSearchParams({ text: `${text}\n${tag}` });
+  if (url) xq.set('url', url);
+  document.getElementById('shareX').href = 'https://twitter.com/intent/tweet?' + xq.toString();
+  document.getElementById('shareLine').href = 'https://line.me/R/msg/text/?' + encodeURIComponent(shareText);
+  shareCopy.textContent = '結果をコピー';
+  shareNative.hidden = !(COARSE && navigator.share);
+}
+shareCopy.addEventListener('click', () => {
+  const done = () => { shareCopy.textContent = 'コピーしました'; };
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = shareText; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+    ta.remove();
+    shareCopy.textContent = ok ? 'コピーしました' : 'コピーできませんでした';
+  };
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(shareText).then(done, fallback);
+    else fallback();
+  } catch (e) { fallback(); }
+});
+shareNative.addEventListener('click', () => {
+  try { const p = navigator.share({ text: shareText }); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+});
 
 // ---------- ゲーム処理 ----------
 let lastBeep = 4;
