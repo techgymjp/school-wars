@@ -1,0 +1,8 @@
+{
+  "appId": "jp.techgym.schoolwars",
+  "appName": "廊下爆走伝",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#0f1016"
+  }
+}
