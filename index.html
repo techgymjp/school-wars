@@ -14,51 +14,55 @@
 <body>
 <div id="app">
   <div id="stage">
-    <canvas id="game" width="960" height="540" aria-label="ゲーム画面：学校の廊下"></canvas>
+    <canvas id="game" width="960" height="540" aria-label="ゲーム画面：学校の廊下" data-i18n-aria="aria.game"></canvas>
     <button id="mute" type="button">音：ON</button>
 
     <section id="title" class="overlay">
       <div class="card">
         <div>
-          <p class="eyebrow">昭和59年 ・ 某県立高校 ・ 三階廊下</p>
-          <h1>廊下爆走伝</h1>
-          <p class="tagline">ガラスを割れ。生徒は轢くな。</p>
-          <p class="lead">放課後の廊下を族車で駆け抜け、窓ガラスを木刀で片っ端から叩き割れ。長さ140メートルの廊下を、速く、そして多く。</p>
+          <p class="eyebrow" data-i18n="title.eyebrow">昭和59年 ・ 某県立高校 ・ 三階廊下</p>
+          <h1 data-i18n="title.name">廊下爆走伝</h1>
+          <p class="tagline" data-i18n="title.tagline">ガラスを割れ。生徒は轢くな。</p>
+          <p class="lead" data-i18n="title.lead">放課後の廊下を族車で駆け抜け、窓ガラスを木刀で片っ端から叩き割れ。長さ140メートルの廊下を、速く、そして多く。</p>
           <div class="actions">
-            <button id="startBtn" class="big" type="button">エンジン始動</button>
+            <button id="startBtn" class="big" type="button" data-i18n="title.start">エンジン始動</button>
           </div>
+          <p class="lang-sel" role="group" aria-label="Language">
+            <button type="button" class="lang-btn" data-lang="ja" aria-pressed="true">日本語</button>
+            <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">English</button>
+          </p>
         </div>
         <div style="display:grid;gap:16px;min-width:0">
           <ul class="rules">
-            <li class="g"><b>ガラス</b><span>割ると +100点。続けて割るとコンボで加点</span></li>
-            <li class="t"><b>先生</b><span>轢くとスピードが大きく落ちる。通せんぼしてくる</span></li>
-            <li class="s"><b>生徒</b><span>轢いたら一発アウト。失格で記録は残らない</span></li>
+            <li class="g"><b data-i18n="rule.glass">ガラス</b><span data-i18n="rule.glassD">割ると +100点。続けて割るとコンボで加点</span></li>
+            <li class="t"><b data-i18n="rule.teacher">先生</b><span data-i18n="rule.teacherD">轢くとスピードが大きく落ちる。通せんぼしてくる</span></li>
+            <li class="s"><b data-i18n="rule.student">生徒</b><span data-i18n="rule.studentD">轢いたら一発アウト。失格で記録は残らない</span></li>
           </ul>
-          <p class="keys">
+          <p class="keys" data-i18n-html="title.keys">
             <kbd>↑</kbd><kbd>↓</kbd> 廊下の奥／手前へ　<kbd>→</kbd> アクセル　<kbd>←</kbd> ブレーキ<br>
             <kbd>Space</kbd> 木刀を振る（壁ぎわで窓が割れる）<br>
             <kbd>X</kbd> パラリラ（生徒がよける）　<kbd>M</kbd> 音のオンオフ
           </p>
-          <p class="touch-help">左の ▲▼ で廊下の奥／手前へ。右の「振る」で窓を割り、「速」で加速、「止」でブレーキ、「パラリラ」で生徒をどかす。</p>
+          <p class="touch-help" data-i18n="title.touchHelp">左の ▲▼ で廊下の奥／手前へ。右の「振る」で窓を割り、「速」で加速、「止」でブレーキ、「パラリラ」で生徒をどかす。</p>
           <div class="board" id="boardTitle"></div>
         </div>
         <p class="legal" id="legal" hidden>
           <span id="buildInfo"></span>
-          <a href="https://techgym.jp/privacy-policy/" target="_blank" rel="noopener">プライバシーポリシー</a>
-          <span id="adPrivacy" hidden>｜<a href="#" id="adPrivacyLink">広告の設定</a></span>
+          <a href="https://techgym.jp/privacy-policy/" data-i18n-href="url.privacy" target="_blank" rel="noopener" data-i18n="legal.privacy">プライバシーポリシー</a>
+          <span id="adPrivacy" hidden>｜<a href="#" id="adPrivacyLink" data-i18n="legal.adSettings">広告の設定</a></span>
         </p>
       </div>
     </section>
 
     <section id="continue" class="overlay" hidden>
       <div class="cont-card">
-        <p class="eyebrow">生徒を轢いてしまった</p>
-        <p class="result-head out">アウト！</p>
+        <p class="eyebrow" data-i18n="cont.eyebrow">生徒を轢いてしまった</p>
+        <p class="result-head out" data-i18n="res.out">アウト！</p>
         <p class="cont-count" id="contCount">10</p>
-        <p class="result-note">広告を見ると、その場から1回だけ走り直せます。</p>
+        <p class="result-note" data-i18n="cont.lead">広告を見ると、その場から1回だけ走り直せます。</p>
         <div class="actions">
           <button id="contWatch" class="big" type="button">広告を見て続行</button>
-          <button id="contGiveUp" class="ghost" type="button">あきらめる</button>
+          <button id="contGiveUp" class="ghost" type="button" data-i18n="cont.giveUp">あきらめる</button>
         </div>
         <p class="result-note" id="contNote"></p>
       </div>
@@ -72,21 +76,21 @@
           <p class="result-note" id="resNote"></p>
           <p class="rank" id="resRank"></p>
           <div class="actions">
-            <button id="againBtn" class="big" type="button">もう一回</button>
-            <button id="backBtn" class="ghost" type="button">タイトルへ</button>
+            <button id="againBtn" class="big" type="button" data-i18n="res.again">もう一回</button>
+            <button id="backBtn" class="ghost" type="button" data-i18n="res.back">タイトルへ</button>
           </div>
           <div class="share">
-            <span class="share-label">結果をシェア</span>
+            <span class="share-label" data-i18n="share.label">結果をシェア</span>
             <div class="share-row">
-              <a id="shareX" class="sbtn x" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener">𝕏 でポスト</a>
-              <a id="shareLine" class="sbtn line" href="https://line.me/R/msg/text/" target="_blank" rel="noopener">LINE で送る</a>
+              <a id="shareX" class="sbtn x" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener" data-i18n="share.x">𝕏 でポスト</a>
+              <a id="shareLine" class="sbtn line" href="https://line.me/R/msg/text/" target="_blank" rel="noopener" data-i18n="share.line">LINE で送る</a>
               <button id="shareCopy" class="sbtn" type="button">結果をコピー</button>
               <button id="shareNative" class="sbtn" type="button" hidden>その他</button>
             </div>
           </div>
         </div>
         <div style="display:grid;gap:16px;min-width:0">
-          <div class="stats"><h2>成績</h2><dl id="resStats"></dl></div>
+          <div class="stats"><h2 data-i18n="res.stats">成績</h2><dl id="resStats"></dl></div>
           <div class="board" id="boardResult"></div>
         </div>
       </div>
@@ -95,28 +99,29 @@
 
   <div id="touch" aria-label="タッチ操作">
     <div class="grp">
-      <button type="button" data-k="up" aria-label="奥へ">▲</button>
-      <button type="button" data-k="down" aria-label="手前へ">▼</button>
+      <button type="button" data-k="up" aria-label="奥へ" data-i18n-aria="tb.up">▲</button>
+      <button type="button" data-k="down" aria-label="手前へ" data-i18n-aria="tb.down">▼</button>
     </div>
     <div class="grp">
-      <button type="button" data-k="horn">パラ<br>リラ</button>
-      <button type="button" data-k="brake">止</button>
-      <button type="button" data-k="accel">速</button>
-      <button type="button" data-k="swing">振る</button>
+      <button type="button" data-k="horn" data-i18n-html="tb.horn">パラ<br>リラ</button>
+      <button type="button" data-k="brake" data-i18n="tb.brake">止</button>
+      <button type="button" data-k="accel" data-i18n="tb.accel">速</button>
+      <button type="button" data-k="swing" data-i18n="tb.swing">振る</button>
     </div>
   </div>
   <div id="rotate" role="dialog" aria-label="横向きのおすすめ">
     <div class="phone" aria-hidden="true"></div>
-    <h2>スマホを横にしてください</h2>
-    <p>廊下爆走伝は横画面で遊ぶゲームです。画面の向きのロックを外して、横向きにしてください。</p>
+    <h2 data-i18n="rot.title">スマホを横にしてください</h2>
+    <p data-i18n="rot.lead">廊下爆走伝は横画面で遊ぶゲームです。画面の向きのロックを外して、横向きにしてください。</p>
     <div class="actions">
-      <button id="landBtn" class="big" type="button">全画面で横にする</button>
-      <button id="portraitOk" class="ghost" type="button">縦のまま遊ぶ</button>
+      <button id="landBtn" class="big" type="button" data-i18n="rot.full">全画面で横にする</button>
+      <button id="portraitOk" class="ghost" type="button" data-i18n="rot.stay">縦のまま遊ぶ</button>
     </div>
   </div>
-  <p class="foot">ドラマ「スクール☆ウォーズ」の名場面をモチーフにしたファンメイドのゲームです。現実の廊下では走らないでください。</p>
+  <p class="foot" data-i18n="foot">ドラマ「スクール☆ウォーズ」の名場面をモチーフにしたファンメイドのゲームです。現実の廊下では走らないでください。</p>
 </div>
 
+<script src="js/i18n.js"></script>
 <script src="js/build-info.js"></script>
 <script src="js/ads-config.js"></script>
 <script src="js/ads.js"></script>

@@ -10,9 +10,9 @@ const COURSE = 14000;                // ゴールまでの距離 (px) = 140m
 const UNIT = 130;                    // 窓1枚ぶんの間隔
 const V_CRUISE = 280, V_MAX = 680, V_MIN = 90;
 const PAR_TIME = 90;                 // タイムボーナスの基準秒
-const ROOMS = ['1年1組','1年2組','1年3組','2年1組','2年2組','2年3組','3年1組','3年2組','3年3組','生徒指導室','職員室'];
 const POSTERS = ['廊下を走るな','暴力追放','整理整頓','信は力なり','遅刻厳禁','挨拶運動','廊下を走るな'];
-const SMASH = ['ガシャーン!','パリーン!','バリバリッ!','ガチャン!','パリン!'];
+const ROOM_COUNT = 11;                // 教室の札の数（名前は js/i18n.js の rooms）
+const t = I18N.t;
 const STORE_KEY = 'rokabakuso.best.v1';
 
 const cv = document.getElementById('game');
@@ -63,6 +63,7 @@ function mulberry32(a) {
 const rnd = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const lerp = (a, b, k) => a + (b - a) * k;
+const pick = a => a[(Math.random() * a.length) | 0];
 
 // ---------- 状態 ----------
 let state = 'title';   // title / countdown / play / crash / continue / goal / result
@@ -91,7 +92,7 @@ function buildCourse(withPeople) {
   let slot = 0, room = 0;
   for (let x = 420; x < COURSE - 160; x += UNIT, slot++) {
     if (slot % 9 === 4) {
-      doors.push({ x, name: ROOMS[Math.min(room, ROOMS.length - 1)], poster: POSTERS[room % POSTERS.length] });
+      doors.push({ x, room: Math.min(room, ROOM_COUNT - 1), poster: POSTERS[room % POSTERS.length] });
       room++;
     } else {
       wins.push({ side: 0, x, w: 108, broken: false, shards: null, crack: R() });
@@ -137,7 +138,7 @@ function makeTeacher(x, y, R) {
 let AC = null, master = null, eng = null, noiseBuf = null, muted = false;
 try { muted = localStorage.getItem('rokabakuso.mute') === '1'; } catch (e) {}
 const muteBtn = document.getElementById('mute');
-function syncMute() { muteBtn.textContent = muted ? '音：OFF' : '音：ON'; if (master) master.gain.value = muted ? 0 : 0.55; }
+function syncMute() { muteBtn.textContent = t(muted ? 'sound.off' : 'sound.on'); if (master) master.gain.value = muted ? 0 : 0.55; }
 syncMute();
 function toggleMute() { muted = !muted; try { localStorage.setItem('rokabakuso.mute', muted ? '1' : '0'); } catch (e) {} syncMute(); }
 muteBtn.addEventListener('click', e => { toggleMute(); e.currentTarget.blur(); });
@@ -343,7 +344,7 @@ function canContinue() { return !continued && Ads.available; }
 function showContinue() {
   state = 'continue'; contT = 10; contBusy = false;
   contWatch.disabled = false;
-  contWatch.textContent = '広告を見て続行';
+  contWatch.textContent = t('cont.watch');
   contNote.textContent = '';
   document.getElementById('contCount').textContent = '10';
   elCont.hidden = false;
@@ -360,11 +361,11 @@ contWatch.addEventListener('click', async () => {
   if (state !== 'continue' || contBusy) return;
   contBusy = true;
   contWatch.disabled = true;
-  contWatch.textContent = '広告を読み込み中…';
+  contWatch.textContent = t('cont.loading');
   const result = await Ads.showRewarded();
   if (state !== 'continue') return;
   if (result === 'unavailable') {
-    contNote.textContent = '広告を読み込めませんでした';
+    contNote.textContent = t('cont.fail');
     setTimeout(giveUp, 2200);
     return;
   }
@@ -375,7 +376,7 @@ contWatch.addEventListener('click', async () => {
   // 起き上がって再出発。少しのあいだは誰にもぶつからない
   bike.rot = 0; bike.v = 160; bike.stun = 0; bike.inv = 2;
   state = 'play';
-  popup(bike.x + 40, bike.y - 120, '再出発！', '#f2c14e', 26, 1.2);
+  popup(bike.x + 40, bike.y - 120, t('cont.restart'), '#f2c14e', 26, 1.2);
   last = performance.now();
 });
 function startGame() {
@@ -416,24 +417,24 @@ function loadBest() { try { const a = JSON.parse(localStorage.getItem(STORE_KEY)
 function saveBest(a) { try { localStorage.setItem(STORE_KEY, JSON.stringify(a)); } catch (e) {} }
 function renderBoard(el, newIdx) {
   const a = loadBest();
-  let h = '<h2>番付（この端末）</h2>';
-  if (!a.length) h += '<p class="empty">まだ記録がありません。ゴールまで走り切ると記録されます。</p>';
+  let h = `<h2>${t('board.title')}</h2>`;
+  if (!a.length) h += `<p class="empty">${t('board.empty')}</p>`;
   else {
     h += '<ol>';
     a.forEach((r, i) => {
-      h += `<li class="${i === newIdx ? 'new' : ''}"><span>${i + 1}.</span><span>${r.rank}</span><span>${r.score.toLocaleString()}点</span>` +
-        `<span class="sub">${r.time.toFixed(2)}秒 ／ ガラス${r.glass}枚</span></li>`;
+      h += `<li class="${i === newIdx ? 'new' : ''}"><span>${i + 1}.</span><span>${rankOf(r.score)}</span><span>${t('board.score', { n: r.score.toLocaleString() })}</span>` +
+        `<span class="sub">${t('board.sub', { t: r.time.toFixed(2), n: r.glass })}</span></li>`;
     });
     h += '</ol>';
   }
   el.innerHTML = h;
 }
 function rankOf(score) {
-  if (score >= 40000) return '伝説の総長';
-  if (score >= 30000) return '親衛隊長';
-  if (score >= 21000) return '特攻隊長';
-  if (score >= 12000) return '下っ端';
-  return 'パシリ';
+  if (score >= 40000) return t('rank.4');
+  if (score >= 30000) return t('rank.3');
+  if (score >= 21000) return t('rank.2');
+  if (score >= 12000) return t('rank.1');
+  return t('rank.0');
 }
 function showResult(goal) {
   resultShown = true;
@@ -441,28 +442,28 @@ function showResult(goal) {
   const timeBonus = goal ? Math.max(0, Math.round((PAR_TIME - runT) * 300)) : 0;
   const total = goal ? glassScore + timeBonus : 0;
   const head = document.getElementById('resHead');
-  head.textContent = goal ? 'ゴール！' : 'アウト！';
+  head.textContent = t(goal ? 'res.goal' : 'res.out');
   head.className = 'result-head ' + (goal ? 'goal' : 'out');
-  document.getElementById('resEyebrow').textContent = goal ? '三階廊下 走破' : '生徒を轢いてしまった';
+  document.getElementById('resEyebrow').textContent = t(goal ? 'res.goalEyebrow' : 'res.outEyebrow');
   document.getElementById('resNote').textContent = goal
-    ? `廊下 140m を ${runT.toFixed(2)} 秒で駆け抜けた。`
-    : '生徒だけは轢いてはいけない。失格なので記録は残らない。';
+    ? t('res.goalNote', { t: runT.toFixed(2) })
+    : t('res.outNote');
   const total2 = wins.length;
   const rows = [
-    ['タイム', goal ? runT.toFixed(2) + ' 秒' : '—'],
-    ['割ったガラス', `${glass} ／ ${total2} 枚`],
-    ['最大コンボ', maxCombo + ' 連続'],
-    ['先生にぶつかった', teacherHits + ' 回'],
-    ['ガラス得点', glassScore.toLocaleString() + ' 点'],
-    ['タイムボーナス', goal ? timeBonus.toLocaleString() + ' 点' : '—'],
+    [t('st.time'), goal ? t('st.timeV', { t: runT.toFixed(2) }) : '—'],
+    [t('st.glass'), t('st.glassV', { n: glass, all: total2 })],
+    [t('st.combo'), t('st.comboV', { n: maxCombo })],
+    [t('st.teacher'), t('st.teacherV', { n: teacherHits })],
+    [t('st.glassScore'), t('st.pts', { n: glassScore.toLocaleString() })],
+    [t('st.bonus'), goal ? t('st.pts', { n: timeBonus.toLocaleString() }) : '—'],
   ];
   document.getElementById('resStats').innerHTML = rows.map(r => `<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('') +
-    `<dt class="total">合計</dt><dd class="total">${goal ? total.toLocaleString() + ' 点' : '失格'}</dd>`;
+    `<dt class="total">${t('st.total')}</dt><dd class="total">${goal ? t('st.pts', { n: total.toLocaleString() }) : t('st.dq')}</dd>`;
   const rankEl = document.getElementById('resRank');
   let newIdx = -1;
   if (goal) {
     const rank = rankOf(total);
-    rankEl.innerHTML = `<small>称号</small>${rank}`;
+    rankEl.innerHTML = `<small>${t('res.rankLabel')}</small>${rank}`;
     const a = loadBest();
     const rec = { score: total, time: runT, glass, rank, at: Date.now() };
     a.push(rec);
@@ -471,12 +472,12 @@ function showResult(goal) {
     newIdx = a.indexOf(rec);
     saveBest(a);
   } else {
-    rankEl.innerHTML = '<small>称号</small>無期停学';
+    rankEl.innerHTML = `<small>${t('res.rankLabel')}</small>${t('rank.out')}`;
   }
   renderBoard(document.getElementById('boardResult'), newIdx);
   setShare(goal
-    ? `【廊下爆走伝】三階廊下を${runT.toFixed(2)}秒で走破！ガラス${glass}枚、合計${total.toLocaleString()}点で称号「${rankOf(total)}」`
-    : `【廊下爆走伝】ガラスを${glass}枚割ったのに、生徒を轢いて失格……称号「無期停学」`);
+    ? t('share.goal', { t: runT.toFixed(2), n: glass, score: total.toLocaleString(), rank: rankOf(total) })
+    : t('share.out', { n: glass, rank: t('rank.out') }));
   elResult.hidden = false;
   root.classList.add('in-menu');
   resultReadyAt = performance.now() + 700;
@@ -494,24 +495,24 @@ let shareText = '';
 const shareCopy = document.getElementById('shareCopy'), shareNative = document.getElementById('shareNative');
 function setShare(text) {
   const url = shareUrl();
-  const tag = '#廊下爆走伝';
+  const tag = t('share.tag');
   shareText = [text, tag, url].filter(Boolean).join(' ');
   const xq = new URLSearchParams({ text: `${text}\n${tag}` });
   if (url) xq.set('url', url);
   document.getElementById('shareX').href = 'https://twitter.com/intent/tweet?' + xq.toString();
   document.getElementById('shareLine').href = 'https://line.me/R/msg/text/?' + encodeURIComponent(shareText);
-  shareCopy.textContent = '結果をコピー';
+  shareCopy.textContent = t('share.copy');
   shareNative.hidden = !(plugin('Share') || (COARSE && navigator.share));
 }
 shareCopy.addEventListener('click', () => {
-  const done = () => { shareCopy.textContent = 'コピーしました'; };
+  const done = () => { shareCopy.textContent = t('share.copied'); };
   const fallback = () => {
     const ta = document.createElement('textarea');
     ta.value = shareText; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
     document.body.appendChild(ta); ta.select();
     let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
     ta.remove();
-    shareCopy.textContent = ok ? 'コピーしました' : 'コピーできませんでした';
+    shareCopy.textContent = t(ok ? 'share.copied' : 'share.copyFail');
   };
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(shareText).then(done, fallback);
@@ -522,7 +523,7 @@ shareNative.addEventListener('click', async () => {
   // アプリでは Android の共有メニュー（LINE・X など）を出す
   const nativeShare = plugin('Share');
   try {
-    if (nativeShare) await nativeShare.share({ title: '廊下爆走伝', text: shareText, dialogTitle: '結果をシェア' });
+    if (nativeShare) await nativeShare.share({ title: t('share.title'), text: shareText, dialogTitle: t('share.dialog') });
     else await navigator.share({ text: shareText });
   } catch (e) { /* キャンセル */ }
 });
@@ -530,8 +531,19 @@ shareNative.addEventListener('click', async () => {
 if (NATIVE) {
   document.getElementById('shareX').hidden = true;
   document.getElementById('shareLine').hidden = true;
-  shareNative.textContent = 'シェア';
 }
+// 「その他」/「シェア」ボタンの文字は言語に合わせて付け替える
+function labelShareNative() { shareNative.textContent = t(NATIVE ? 'share.native' : 'share.more'); }
+labelShareNative();
+
+// ---------- 言語 ----------
+I18N.apply();
+document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => I18N.setLang(b.dataset.lang)));
+I18N.onChange(() => {
+  syncMute();
+  labelShareNative();
+  renderBoard(document.getElementById('boardTitle'), -1);
+});
 
 // ---------- アプリ版の表示 ----------
 // どのビルドが入っているか分かるよう、アプリ版はタイトル画面にバージョンとプライバシーポリシーを出す
@@ -587,7 +599,7 @@ function breakWin(w, demo) {
   const pts = 100 + Math.min(combo - 1, 20) * 10;
   glassScore += pts;
   const py = w.side === 0 ? 70 : 470;
-  popup(w.x + w.w / 2, py, SMASH[(Math.random() * SMASH.length) | 0], '#bfe9f5', 24, 0.7);
+  popup(w.x + w.w / 2, py, pick(I18N.list('smash')), '#bfe9f5', 24, 0.7);
   popup(w.x + w.w / 2, py + 26, '+' + pts, '#f2c14e', 18, 0.7);
   shake = Math.max(shake, 3);
   sfx.glass();
@@ -608,15 +620,15 @@ function startSwing() {
 }
 
 function hitTeacher(e) {
-  e.down = true; e.downT = 0; e.vx = Math.max(160, bike.v * 0.7); e.bubble = { text: 'ぐはっ!', t: 0.9 };
+  e.down = true; e.downT = 0; e.vx = Math.max(160, bike.v * 0.7); e.bubble = { text: t('say.oof'), t: 0.9 };
   bike.v *= 0.3; bike.stun = 0.9;
   teacherHits++; combo = 0;
   shake = 12;
-  popup(bike.x + 20, bike.y - 110, 'スピードダウン', '#f2c14e', 22, 1.1);
+  popup(bike.x + 20, bike.y - 110, t('pop.slow'), '#f2c14e', 22, 1.1);
   sfx.thud();
 }
 function hitStudent(e) {
-  e.down = true; e.downT = 0; e.vx = bike.v * 0.35; e.bubble = { text: 'うわっ!', t: 1.2 };
+  e.down = true; e.downT = 0; e.vx = bike.v * 0.35; e.bubble = { text: t('say.whoa'), t: 1.2 };
   state = 'crash'; crashT = 0;
   shake = 18;
   sfx.crash();
@@ -698,7 +710,7 @@ function updateBike(dt) {
 function honk() {
   hornCD = 3.5;
   sfx.horn();
-  popup(bike.x - 30, bike.y - 130, 'パラリラ〜♪', '#e0333d', 22, 1.1);
+  popup(bike.x - 30, bike.y - 130, t('pop.horn'), '#e0333d', 22, 1.1);
   for (const e of ents) {
     const ahead = e.x - bike.x;
     if (e.type !== 's' || e.down || e.scared || ahead < 0 || ahead > 650) continue;
@@ -709,7 +721,7 @@ function scare(e, dur) {
   e.panic = dur; e.scared = true;
   e.fleeDir = e.y >= bike.y ? 1 : -1;
   if ((e.fleeDir > 0 && e.y > Y_MAX - 30) || (e.fleeDir < 0 && e.y < Y_MIN + 30)) e.fleeDir *= -1;
-  e.bubble = { text: Math.random() < 0.5 ? 'キャー!' : 'ひぃっ!', t: 0.9 };
+  e.bubble = { text: pick(I18N.list('say.scream')), t: 0.9 };
 }
 function collide() {
   if (bike.inv > 0) return;
@@ -747,7 +759,7 @@ function updateEnts(dt) {
     } else {
       e.phase += dt * 6;
       if (live && ahead > 0 && ahead < 520) {
-        if (!e.alert) { e.alert = true; e.bubble = { text: 'コラーッ!', t: 1.2 }; sfx.whistle(); }
+        if (!e.alert) { e.alert = true; e.bubble = { text: t('say.hey'), t: 1.2 }; sfx.whistle(); }
         const dy = bike.y - e.y;
         e.y += clamp(dy, -95 * dt, 95 * dt);
         e.x -= 25 * dt;
@@ -819,16 +831,16 @@ function render() {
   ctx.restore();
   if (state !== 'title') drawHUD();
   if (state === 'countdown') drawCountdown();
-  if (state === 'crash' && crashT > 0.25) bigText('アウト！', '#e0333d', '#000', Math.min(1, (crashT - 0.25) * 4));
-  if (state === 'goal') bigText('ゴール！', '#f2c14e', '#e0333d', Math.min(1, finishT * 4));
+  if (state === 'crash' && crashT > 0.25) bigText(t('big.out'), '#e0333d', '#000', Math.min(1, (crashT - 0.25) * 4));
+  if (state === 'goal') bigText(t('big.goal'), '#f2c14e', '#e0333d', Math.min(1, finishT * 4));
   if (paused) drawPause();
 }
 function drawPause() {
   ctx.fillStyle = 'rgba(10,10,16,.6)'; ctx.fillRect(0, 0, W, H);
-  bigText('一時停止', '#f1eadb', '#e0333d', 1);
+  bigText(t('big.pause'), '#f1eadb', '#e0333d', 1);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = `20px ${FONT_DOT}`; ctx.fillStyle = '#f1eadb';
-  ctx.fillText(NATIVE || COARSE ? '画面をタップで再開' : 'Esc か P で再開', W / 2, H / 2 + 80);
+  ctx.fillText(t(NATIVE || COARSE ? 'pause.tc' : 'pause.kb'), W / 2, H / 2 + 80);
 }
 
 function drawFarWall() {
@@ -867,7 +879,7 @@ function drawFarWall() {
     ctx.fillStyle = '#f6f3ea'; ctx.fillRect(X + 2, 24, 74, 14);
     ctx.strokeStyle = '#333'; ctx.lineWidth = 1; ctx.strokeRect(X + 2.5, 24.5, 73, 13);
     ctx.fillStyle = '#1a1a1a'; ctx.font = `bold 11px ${FONT_DOT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(d.name, X + 39, 31.5);
+    ctx.fillText(I18N.list('rooms')[d.room], X + 39, 31.5);
     // 縦書きの貼り紙
     ctx.fillStyle = '#fbfaf3'; ctx.fillRect(X + 86, 44, 30, 92);
     ctx.fillStyle = 'rgba(0,0,0,.12)'; ctx.fillRect(X + 86, 134, 30, 2);
@@ -950,13 +962,13 @@ function drawFinish() {
   // 吊り下げ幕
   ctx.fillStyle = '#b3202a'; ctx.fillRect(X - 60, 26, 148, 40);
   ctx.fillStyle = '#fff'; ctx.font = `24px ${FONT_DISP}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('ゴール', X + 14, 47);
+  ctx.fillText(t('sign.goal'), X + 14, 47);
   // 廊下の突き当たり
   const E = COURSE + 420 - camX;
   if (E < W) {
     ctx.fillStyle = '#bfb397'; ctx.fillRect(E, 0, W - E + 10, FLOOR_BOT);
     ctx.fillStyle = '#2f9e5a'; ctx.fillRect(E + 30, 40, 80, 30);
-    ctx.fillStyle = '#fff'; ctx.font = `15px ${FONT_DOT}`; ctx.fillText('非常口', E + 70, 56);
+    ctx.fillStyle = '#fff'; ctx.font = `15px ${FONT_DOT}`; ctx.fillText(t('sign.exit'), E + 70, 56);
   }
 }
 
@@ -1237,7 +1249,7 @@ function drawHUD() {
   ctx.fillStyle = 'rgba(12,12,18,.78)'; ctx.fillRect(10, 8, 330, 54);
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#a9a294'; ctx.font = `12px ${FONT_DOT}`;
-  ctx.fillText('タイム', 20, 26); ctx.fillText('ガラス', 130, 26); ctx.fillText('得点', 236, 26);
+  ctx.fillText(t('hud.time'), 20, 26); ctx.fillText(t('hud.glass'), 130, 26); ctx.fillText(t('hud.score'), 236, 26);
   ctx.fillStyle = '#f1eadb'; ctx.font = `22px ${FONT_DOT}`;
   ctx.fillText(runT.toFixed(2), 20, 52);
   ctx.fillStyle = '#9fd3e3'; ctx.fillText(`${glass}`, 130, 52);
@@ -1248,14 +1260,16 @@ function drawHUD() {
   const px = W - 300, pw = 280;
   ctx.fillStyle = 'rgba(12,12,18,.78)'; ctx.fillRect(px - 10, 8, pw + 20, 54);
   ctx.fillStyle = '#a9a294'; ctx.font = `12px ${FONT_DOT}`; ctx.textAlign = 'left';
-  ctx.fillText('三階廊下', px, 26);
-  ctx.textAlign = 'right'; ctx.fillText(`残り ${Math.max(0, (COURSE - bike.x) / 100).toFixed(0)}m`, px + pw, 26);
+  ctx.fillText(t('hud.floor'), px, 26);
+  ctx.textAlign = 'right'; ctx.fillText(t('hud.left', { m: Math.max(0, (COURSE - bike.x) / 100).toFixed(0) }), px + pw, 26);
   ctx.fillStyle = '#34354a'; ctx.fillRect(px, 40, pw, 6);
   const staffX = px + pw * (doors.length ? doors[doors.length - 1].x / COURSE : 0.9);
   ctx.fillStyle = '#c8283a'; ctx.fillRect(staffX - 1, 36, 3, 14);
   ctx.fillStyle = '#9fd3e3'; ctx.fillRect(px, 40, pw * clamp(bike.x / COURSE, 0, 1), 6);
   ctx.fillStyle = '#f1eadb'; ctx.beginPath(); ctx.arc(px + pw * clamp(bike.x / COURSE, 0, 1), 43, 5, 0, 7); ctx.fill();
-  ctx.fillStyle = '#a9a294'; ctx.font = `10px ${FONT_DOT}`; ctx.textAlign = 'center'; ctx.fillText('職員室', staffX, 60);
+  ctx.fillStyle = '#a9a294'; ctx.font = `10px ${FONT_DOT}`; ctx.textAlign = 'center';
+  const staffW = ctx.measureText(t('hud.staff')).width;
+  ctx.fillText(t('hud.staff'), Math.min(staffX, px + pw + 4 - staffW / 2), 60);
   // 左下：速度計
   ctx.fillStyle = 'rgba(12,12,18,.8)'; ctx.fillRect(10, H - 46, 250, 38);
   const kmh = Math.round(bike.v * 0.12);
@@ -1266,11 +1280,11 @@ function drawHUD() {
   ctx.fillStyle = '#34354a'; ctx.fillRect(104, H - 32, sw, 10);
   ctx.fillStyle = bike.stun > 0 ? '#f2c14e' : (sv > 0.85 ? '#e0333d' : '#9fd3e3');
   ctx.fillRect(104, H - 32, sw * sv, 10);
-  if (bike.stun > 0) { ctx.fillStyle = '#f2c14e'; ctx.font = `10px ${FONT_DOT}`; ctx.fillText('減速中', 104, H - 36); }
+  if (bike.stun > 0) { ctx.fillStyle = '#f2c14e'; ctx.font = `10px ${FONT_DOT}`; ctx.fillText(t('hud.slow'), 104, H - 36); }
   // パラリラの溜まり具合
   const hk = clamp(1 - hornCD / 3.5, 0, 1);
   ctx.fillStyle = 'rgba(12,12,18,.8)'; ctx.fillRect(268, H - 46, 92, 38);
-  ctx.fillStyle = hk >= 1 ? '#e0333d' : '#5a5b70'; ctx.font = `12px ${FONT_DOT}`; ctx.fillText('パラリラ', 278, H - 30);
+  ctx.fillStyle = hk >= 1 ? '#e0333d' : '#5a5b70'; ctx.font = `12px ${FONT_DOT}`; ctx.fillText(t('hud.horn'), 278, H - 30);
   ctx.fillStyle = '#34354a'; ctx.fillRect(278, H - 22, 72, 5);
   ctx.fillStyle = hk >= 1 ? '#e0333d' : '#8a8ba0'; ctx.fillRect(278, H - 22, 72 * hk, 5);
   // コンボ
@@ -1278,7 +1292,8 @@ function drawHUD() {
     const a = clamp((1.2 - (runT - lastBreak)) * 2, 0, 1);
     ctx.globalAlpha = a;
     ctx.textAlign = 'center'; ctx.font = `34px ${FONT_DISP}`; ctx.lineWidth = 6; ctx.strokeStyle = '#111';
-    ctx.strokeText(`${combo} コンボ`, W / 2, 100); ctx.fillStyle = '#f2c14e'; ctx.fillText(`${combo} コンボ`, W / 2, 100);
+    const ct = t('hud.combo', { n: combo });
+    ctx.strokeText(ct, W / 2, 100); ctx.fillStyle = '#f2c14e'; ctx.fillText(ct, W / 2, 100);
     ctx.globalAlpha = 1;
   }
 }
@@ -1288,8 +1303,8 @@ function drawCountdown() {
   if (countdown > 2.6) {
     ctx.textAlign = 'center'; ctx.font = `18px ${FONT_DOT}`; ctx.fillStyle = '#f1eadb';
     ctx.lineWidth = 4; ctx.strokeStyle = '#111';
-    const t = '壁ぎわで Space ／ 生徒はよけろ';
-    ctx.strokeText(t, W / 2, 360); ctx.fillText(t, W / 2, 360);
+    const hint = t(NATIVE || COARSE ? 'hint.tc' : 'hint.kb');
+    ctx.strokeText(hint, W / 2, 360); ctx.fillText(hint, W / 2, 360);
   }
 }
 function bigText(t, fill, edge, a) {

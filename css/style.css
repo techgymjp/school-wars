@@ -344,3 +344,31 @@ button.big:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; 
   .coarse .cont-card { padding: 10px; gap: 4px; }
   .coarse .cont-count { font-size: 40px; }
 }
+
+/* 言語の切り替え */
+.lang-sel { display: flex; gap: 6px; margin: 12px 0 0; }
+.lang-btn {
+  font-family: var(--f-body);
+  font-size: 13px;
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+.lang-btn[aria-pressed="true"] { color: var(--paper); border-color: var(--red); background: rgba(224,51,61,.25); }
+.lang-btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .coarse .lang-sel { margin-top: 8px; }
+  .coarse .lang-btn { font-size: 12px; padding: 3px 10px; }
+}
+/* 英語のタイトルは日本語より横に長いので小さめにする */
+:root[lang="en"] h1 { font-size: clamp(36px, 4.8vw, 62px); }
+@media (orientation: landscape) and (max-height: 520px) {
+  :root[lang="en"].coarse h1 { font-size: 30px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  /* メニュー画面では操作ボタンが出ないので、音のボタンは右下に置いて見出しと重ならないようにする */
+  .coarse.in-menu #mute { top: auto; bottom: 6px; left: auto; right: 6px; transform: none; }
+}
