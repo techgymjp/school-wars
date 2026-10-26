@@ -28,12 +28,14 @@ const FLEE_PTS = 50;     // パラリラで生徒を 1 人逃がすごとの点
 const RIVAL_PTS = 300;   // 他校の暴走族を木刀ではじき返したときの点
 const PASS_PTS = 1000;   // 屋上でラグビー部監督を振り切ったときの点
 let lap = 1, stageIdx = 2, stage = STAGES[2], course = STAGES[2].len;
-// 2 周目からは他校の暴走族とワックスの床、3 周目からは各面のゴール前にボス教師が加わる
+// 2 周目からは他校の暴走族とワックスの床、3 周目からは昼休みの人混み・停電・各面のゴール前のボス教師が加わる
 const hasRivals = () => lap >= 2 && !stage.boss;
 const isWaxed = () => lap >= 2;
+const isLunch = () => lap >= 3;
+const isNight = () => lap >= 3;
 const hasGoalBoss = () => lap >= 3 && !stage.boss;
 function hazards() {
-  return [hasRivals() && 'hz.rival', isWaxed() && 'hz.wax', hasGoalBoss() && 'hz.boss'].filter(Boolean);
+  return [hasRivals() && 'hz.rival', isWaxed() && 'hz.wax', isLunch() && !stage.boss && 'hz.lunch', isNight() && 'hz.night', hasGoalBoss() && 'hz.boss'].filter(Boolean);
 }
 
 const cv = document.getElementById('game');
@@ -128,7 +130,7 @@ function buildCourse(withPeople) {
   }
   if (!withPeople) return;
   if (st.boss) { ents.push(makeBoss(1500)); return; }
-  const sMul = st.students;
+  const sMul = st.students * (isLunch() ? 1.7 : 1);
   const gap = 0.6 + 0.4 * sMul;              // 人が多い面ほど間隔を詰める
   let x = 1050;
   while (x < course - 380) {
@@ -1165,6 +1167,7 @@ function render() {
   for (const o of list) if (o !== bike && o.bubble) drawBubble(o);
   drawParts();
   drawNearWall();
+  if (isNight() && state !== 'title') drawNight();
   drawPops();
   ctx.restore();
   if (state !== 'title') drawHUD();
@@ -1172,6 +1175,15 @@ function render() {
   if (state === 'crash' && crashT > 0.25) bigText(t('big.out'), '#e0333d', '#000', Math.min(1, (crashT - 0.25) * 4));
   if (state === 'goal') bigText(t('big.goal'), '#f2c14e', '#e0333d', Math.min(1, finishT * 4));
   if (paused) drawPause();
+}
+// 停電：バイクのライトが照らす前方だけ見える
+function drawNight() {
+  const bx = bike.x - camX + 150, by = bike.y - 50;
+  const g = ctx.createRadialGradient(bx, by, 40, bx, by, 430);
+  g.addColorStop(0, 'rgba(4,4,14,0)');
+  g.addColorStop(0.45, 'rgba(4,4,14,.45)');
+  g.addColorStop(1, 'rgba(4,4,14,.9)');
+  ctx.fillStyle = g; ctx.fillRect(-20, -20, W + 40, H + 40);
 }
 function drawPause() {
   ctx.fillStyle = 'rgba(10,10,16,.6)'; ctx.fillRect(0, 0, W, H);
@@ -1251,10 +1263,10 @@ function drawLocker(X, Y, w, h, item) {
 // 屋上：空と街並み、奥はフェンス
 function drawRoofFar() {
   const g = ctx.createLinearGradient(0, 0, 0, FLOOR_TOP);
-  g.addColorStop(0, '#6fa9d6'); g.addColorStop(1, '#cfe4f2');
+  g.addColorStop(0, isNight() ? '#0b1026' : '#6fa9d6'); g.addColorStop(1, isNight() ? '#1b2340' : '#cfe4f2');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, FLOOR_TOP);
   // 遠くの街並み（ゆっくり流れる）
-  ctx.fillStyle = '#9fb3c4';
+  ctx.fillStyle = isNight() ? '#141a30' : '#9fb3c4';
   for (let i = -1; i < 12; i++) {
     const bx = i * 110 - ((camX * 0.2) % 110), bh = 30 + ((i * 37 + Math.floor(camX * 0.2 / 110) * 37) % 50 + 50) % 50;
     ctx.fillRect(bx, FLOOR_TOP - 20 - bh, 90, bh + 20);
