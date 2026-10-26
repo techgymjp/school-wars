@@ -87,6 +87,10 @@ Android アプリでのみ広告を表示します（Web 版には広告は出�
 
 https://github.com/techgymjp/school-wars/releases/latest/download/school-wars.apk
 
+リリース画面（https://github.com/techgymjp/school-wars/releases/tag/android-latest ）は次の QR コードからも開けます。
+
+<img src="docs/apk-qr.png" alt="APK のリリース画面を開く QR コード" width="180">
+
 ダウンロードした `school-wars.apk` を開き、「提供元不明のアプリ」のインストールを許可するとインストールできます。
 動作確認用の署名鍵（`android/app/debug.keystore`）はリポジトリで固定しているので、新しいビルドもアンインストールせずに上書きインストールできます。
 （Release に載る APK はデバッグ版です。Google Play には下の手順で作る署名済み .aab を使います）
