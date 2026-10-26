@@ -506,3 +506,27 @@ button.big:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; 
   .coarse .clear-next { font-size: 13px; }
 }
 .ctl-note { margin: 8px 0 0; color: #d6cfc1; font-size: 14px; }
+
+/* タイトル画面の登場人物は 5 段：ガラス・先生・生徒・他校の暴走族・ボス教師 */
+.tile.r { border-color: #3fae66; } .tile.r b { color: #6fd18f; }
+.tile.b { border-color: #b9b3a6; } .tile.b b { color: var(--paper); }
+.tiles { gap: 6px; }
+.tile { padding-block: 5px; }
+.tile canvas { width: 80px !important; height: 56px !important; }
+.tile b { font-size: 16px; }
+.tile span { font-size: 13px; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .coarse .tiles { gap: 4px; }
+  .coarse .tile { padding: 2px 8px 2px 2px; column-gap: 8px; }
+  .coarse .tile canvas { width: 54px !important; height: 38px !important; }
+  .coarse .tile b { font-size: 13px; }
+  .coarse .tile span { font-size: 11px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  /* 横持ちの小さいスマホでも、見出しの後ろに暗幕を敷いて読めるようにする（縦向き用の指定を打ち消す） */
+  .coarse #title {
+    position: absolute;
+    background: linear-gradient(180deg, rgba(10,10,16,.94) 0%, rgba(10,10,16,.86) 58%, rgba(10,10,16,.35) 72%, rgba(10,10,16,0) 82%);
+  }
+  .coarse #title .legal { position: absolute; background: rgba(10,10,16,.65); padding: 2px 8px; }
+}

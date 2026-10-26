@@ -457,6 +457,16 @@ const SPRITES = {
     ctx.fillStyle = 'rgba(160,215,235,.28)'; ctx.fillRect(0, 46, w, 22);
     place(0.42, 0, Y_MAX, 46, 68); drawBike(demoBike(0, { swingT: 0.08, swingSide: -1 }));
   },
+  rival(place, w, h) {
+    ctx.fillStyle = C.floorB; ctx.fillRect(0, 0, w * DPR, h * DPR);
+    const r = Object.assign(makeRival(0, Y_MAX), { wheel: 0.4, bubble: { text: t('say.rival'), t: 1 } });
+    place(h < 90 ? 0.5 : 0.56, 0, Y_MAX, w / 2, h - 4); drawBike(r); drawBubble(r);
+  },
+  chief(place, w, h) {
+    ctx.fillStyle = C.floorB; ctx.fillRect(0, 0, w * DPR, h * DPR);
+    const e = Object.assign(makeBoss(0, 'chief'), { y: Y_MAX, bubble: { text: t('say.boss'), t: 1 } });
+    place(h < 90 ? 0.5 : 0.56, 0, Y_MAX, w / 2 - 4, h - 4); drawTeacher(e); drawBubble(e);
+  },
   horn(place, w, h) {
     ctx.fillStyle = C.floorB; ctx.fillRect(0, 0, w * DPR, h * DPR);
     const s1 = demoStudent(150, 1, { panic: 0.5, scared: true, bubble: { text: I18N.list('say.scream')[0], t: 1 } });
