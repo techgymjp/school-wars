@@ -185,6 +185,12 @@ function syncMute() { muteBtn.textContent = t(muted ? 'sound.off' : 'sound.on');
 syncMute();
 function toggleMute() { muted = !muted; try { localStorage.setItem('rokabakuso.mute', muted ? '1' : '0'); } catch (e) {} syncMute(); }
 muteBtn.addEventListener('click', e => { toggleMute(); e.currentTarget.blur(); });
+// 画面に触れたら、止まっている音を鳴らせる状態に戻す（広告のあとなどに止まったままにならないように）
+const unlockAudio = () => {
+  if (AC && AC.state === 'suspended' && !document.hidden && !Ads.showing) AC.resume().catch(() => {});
+};
+addEventListener('pointerdown', unlockAudio, true);
+addEventListener('keydown', unlockAudio, true);
 
 // 広告の表示中やアプリが裏に回ったときに音を止める（js/ads.js からも使う）
 window.Sfx = {
@@ -461,6 +467,8 @@ document.getElementById('backBtn').addEventListener('click', () => afterAd(toTit
 let adBusy = false;
 async function afterAd(next) {
   if (adBusy) return;
+  // 音はタップした瞬間に用意しておく（広告が閉じたあとに用意すると、Android では音が出ないままになる）
+  initAudio();
   if (Ads.available) {
     adBusy = true;
     try { await Ads.showInterstitial(); } finally { adBusy = false; }
