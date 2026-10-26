@@ -6,10 +6,9 @@ const Ads = (() => {
       interstitial: 'ca-app-pub-3940256099942544/1033173712',
       rewarded: 'ca-app-pub-3940256099942544/5224354917',
     },
-    // 本番の広告ユニット。AdMob で作成したら ID を入れる（空のままだと Google Play 版では広告を出さない）
     production: {
-      interstitial: '',
-      rewarded: '',
+      interstitial: 'ca-app-pub-6411535997477460/2933161308',
+      rewarded: 'ca-app-pub-6411535997477460/4906260519',
     },
   };
   const RETRY_MS = 20000;      // 読み込みに失敗したら少し待って再挑戦する

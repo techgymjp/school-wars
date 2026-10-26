@@ -75,7 +75,7 @@ Android アプリでのみ広告を表示します（Web 版には広告は出�
 
 - EU・英国など同意が必要な地域では、初回起動時に Google の同意確認画面が出ます。その地域では、タイトル画面の「広告の設定」から同意内容をいつでも変更できます。
 - AdMob のアプリ ID は `android/app/src/main/res/values/strings.xml` の `admob_app_id` にあります。
-- **広告ユニット ID（インタースティシャル・リワード）はまだ空です。** 作成したら `js/ads.js` の `UNITS.production` に入れてください（空のままだと Google Play 版では広告を出しません）。
+- 広告ユニット ID（インタースティシャル・リワード）は `js/ads.js` の `UNITS.production` にあります。
 - 動作確認用 APK（Release の `school-wars.apk`）は常に **Google のテスト広告** を表示します。自分でタップしても問題ありません。
 - Google Play 用の .aab をビルドするときだけ、CI が `ADMOB_MODE=production` で本番の広告に切り替えます（`scripts/build-web.js` が `js/ads-config.js` を書き換えます）。
 - 本番の広告を自分でタップするとアカウント停止の対象になるので注意してください。
