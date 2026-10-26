@@ -74,9 +74,8 @@ Android アプリでのみ広告を表示します（Web 版には広告は出�
 | リワード | 生徒を轢いてアウトになったとき「広告を見て続行」を選ぶと、その場から走り直せる（1 ゲーム 1 回まで、10 秒で自動的に結果画面へ） |
 
 - EU・英国など同意が必要な地域では、初回起動時に Google の同意確認画面が出ます。その地域では、タイトル画面の「広告の設定」から同意内容をいつでも変更できます。
-- **まだテスト用の ID のままです。** AdMob でアプリと広告ユニットを作成したら、次の 2 か所を書き換えてください。
-  - 広告ユニット ID（インタースティシャル・リワード）：`js/ads.js` の `UNITS.production`（空のままだと Google Play 版では広告を出しません）
-  - AdMob のアプリ ID：`android/app/src/main/res/values/strings.xml` の `admob_app_id`
+- AdMob のアプリ ID は `android/app/src/main/res/values/strings.xml` の `admob_app_id` にあります。
+- **広告ユニット ID（インタースティシャル・リワード）はまだ空です。** 作成したら `js/ads.js` の `UNITS.production` に入れてください（空のままだと Google Play 版では広告を出しません）。
 - 動作確認用 APK（Release の `school-wars.apk`）は常に **Google のテスト広告** を表示します。自分でタップしても問題ありません。
 - Google Play 用の .aab をビルドするときだけ、CI が `ADMOB_MODE=production` で本番の広告に切り替えます（`scripts/build-web.js` が `js/ads-config.js` を書き換えます）。
 - 本番の広告を自分でタップするとアカウント停止の対象になるので注意してください。

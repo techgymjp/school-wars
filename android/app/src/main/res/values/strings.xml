@@ -4,6 +4,6 @@
     <string name="title_activity_main">Hallway Rampage</string>
     <string name="package_name">jp.techgym.schoolwars</string>
     <string name="custom_url_scheme">jp.techgym.schoolwars</string>
-    <!-- AdMob のアプリ ID。いまは Google 公式のテスト用 ID。AdMob でアプリを追加したら本番の ID に差し替える -->
-    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+    <!-- AdMob のアプリ ID -->
+    <string name="admob_app_id">ca-app-pub-6411535997477460~6762267665</string>
 </resources>
