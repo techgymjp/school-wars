@@ -28,13 +28,12 @@ const FLEE_PTS = 50;     // パラリラで生徒を 1 人逃がすごとの点
 const RIVAL_PTS = 300;   // 他校の暴走族を木刀ではじき返したときの点
 const PASS_PTS = 1000;   // 屋上でラグビー部監督を振り切ったときの点
 let lap = 1, stageIdx = 2, stage = STAGES[2], course = STAGES[2].len;
-// 2 周目からは他校の暴走族とワックスの床、3 周目からは昼休みの人混みと停電が加わる
+// 2 周目からは他校の暴走族とワックスの床、3 周目からは各面のゴール前にボス教師が加わる
 const hasRivals = () => lap >= 2 && !stage.boss;
 const isWaxed = () => lap >= 2;
-const isLunch = () => lap >= 3;
-const isNight = () => lap >= 3;
+const hasGoalBoss = () => lap >= 3 && !stage.boss;
 function hazards() {
-  return [hasRivals() && 'hz.rival', isWaxed() && 'hz.wax', isLunch() && !stage.boss && 'hz.lunch', isNight() && 'hz.night'].filter(Boolean);
+  return [hasRivals() && 'hz.rival', isWaxed() && 'hz.wax', hasGoalBoss() && 'hz.boss'].filter(Boolean);
 }
 
 const cv = document.getElementById('game');
@@ -129,7 +128,7 @@ function buildCourse(withPeople) {
   }
   if (!withPeople) return;
   if (st.boss) { ents.push(makeBoss(1500)); return; }
-  const sMul = st.students * (isLunch() ? 1.7 : 1);
+  const sMul = st.students;
   const gap = 0.6 + 0.4 * sMul;              // 人が多い面ほど間隔を詰める
   let x = 1050;
   while (x < course - 380) {
@@ -157,6 +156,8 @@ function buildCourse(withPeople) {
   if (hasRivals()) {
     for (let rx = 2600; rx < course - 900; rx += 1700 + R() * 900) ents.push(makeRival(rx, Y_MIN + R() * (Y_MAX - Y_MIN)));
   }
+  // 3 周目：ゴールの手前でボス教師が待ち構える
+  if (hasGoalBoss()) ents.push(makeBoss(course - 1300, 'chief'));
 }
 function makeStudent(x, y, mode, R) {
   return {
@@ -172,10 +173,12 @@ function makeTeacher(x, y, R, kind) {
 function makeRival(x, y) {
   return Object.assign(newBike(), { type: 'r', rival: true, x, y, v: 230, down: false, fade: 1, bubble: null, said: false });
 }
-// 屋上のボス：熱血ラグビー部監督。振り切っても先回りしてまた立ちはだかる
-function makeBoss(x) {
-  return { type: 'b', kind: 'coach', x, y: (Y_MIN + Y_MAX) / 2, phase: 0, dir: -1, alert: true, down: false, downT: 0, away: 0, bubble: null };
+// ボス：屋上の熱血ラグビー部監督（coach）は振り切っても先回りしてまた立ちはだかる。
+// 3 周目の各面のゴール前にいるボス教師（chief）は、ゴールまでに 2 回まで先回りする
+function makeBoss(x, kind) {
+  return { type: 'b', kind: kind || 'coach', x, y: (Y_MIN + Y_MAX) / 2, phase: 0, dir: -1, alert: true, down: false, downT: 0, away: 0, blocks: 0, bubble: null };
 }
+const bossLine = e => (e.kind === 'chief' ? t('say.boss') : pick(I18N.list('say.coach')));
 
 // ---------- 音 ----------
 let AC = null, master = null, eng = null, noiseBuf = null, muted = false;
@@ -1080,20 +1083,23 @@ function updateBoss(e, dt) {
   if (e.away > 0) {
     e.away -= dt;
     if (e.away <= 0) {
-      if (bike.x < course - 900) {
+      const again = e.kind === 'chief' ? e.blocks < 2 && bike.x < course - 450 : bike.x < course - 900;
+      if (again) {
         // 先回りして、また前に立ちはだかる
-        e.x = bike.x + 640; e.y = rnd(Y_MIN + 20, Y_MAX - 20);
-        e.bubble = { text: pick(I18N.list('say.coach')), t: 1.3 };
+        e.blocks++;
+        e.x = Math.min(bike.x + (e.kind === 'chief' ? 560 : 640), course - 160); e.y = rnd(Y_MIN + 20, Y_MAX - 20);
+        e.bubble = { text: bossLine(e), t: 1.3 };
         sfx.whistle();
       } else e.gone = true;
     }
     return;
   }
+  if (e.x - bike.x > W) return;   // ゴール前のボスは、近づくまで待っている
   e.phase += dt * 10;
   const sp = 120 + 45 * lap;
   e.y = clamp(e.y + clamp(bike.y - e.y, -sp * dt, sp * dt), Y_MIN, Y_MAX);
   e.x -= 70 * dt;
-  if (!e.bubble && !e.spoke) { e.spoke = true; e.bubble = { text: pick(I18N.list('say.coach')), t: 1.3 }; }
+  if (!e.bubble && !e.spoke) { e.spoke = true; e.bubble = { text: bossLine(e), t: 1.3 }; sfx.whistle(); }
   // 振り切った
   if (e.x < bike.x - 50) {
     bonusPts += PASS_PTS;
@@ -1159,7 +1165,6 @@ function render() {
   for (const o of list) if (o !== bike && o.bubble) drawBubble(o);
   drawParts();
   drawNearWall();
-  if (isNight() && state !== 'title') drawNight();
   drawPops();
   ctx.restore();
   if (state !== 'title') drawHUD();
@@ -1167,15 +1172,6 @@ function render() {
   if (state === 'crash' && crashT > 0.25) bigText(t('big.out'), '#e0333d', '#000', Math.min(1, (crashT - 0.25) * 4));
   if (state === 'goal') bigText(t('big.goal'), '#f2c14e', '#e0333d', Math.min(1, finishT * 4));
   if (paused) drawPause();
-}
-// 停電：バイクのライトが照らす前方だけ見える
-function drawNight() {
-  const bx = bike.x - camX + 150, by = bike.y - 50;
-  const g = ctx.createRadialGradient(bx, by, 40, bx, by, 430);
-  g.addColorStop(0, 'rgba(4,4,14,0)');
-  g.addColorStop(0.45, 'rgba(4,4,14,.45)');
-  g.addColorStop(1, 'rgba(4,4,14,.9)');
-  ctx.fillStyle = g; ctx.fillRect(-20, -20, W + 40, H + 40);
 }
 function drawPause() {
   ctx.fillStyle = 'rgba(10,10,16,.6)'; ctx.fillRect(0, 0, W, H);
@@ -1255,10 +1251,10 @@ function drawLocker(X, Y, w, h, item) {
 // 屋上：空と街並み、奥はフェンス
 function drawRoofFar() {
   const g = ctx.createLinearGradient(0, 0, 0, FLOOR_TOP);
-  g.addColorStop(0, isNight() ? '#0b1026' : '#6fa9d6'); g.addColorStop(1, isNight() ? '#1b2340' : '#cfe4f2');
+  g.addColorStop(0, '#6fa9d6'); g.addColorStop(1, '#cfe4f2');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, FLOOR_TOP);
   // 遠くの街並み（ゆっくり流れる）
-  ctx.fillStyle = isNight() ? '#141a30' : '#9fb3c4';
+  ctx.fillStyle = '#9fb3c4';
   for (let i = -1; i < 12; i++) {
     const bx = i * 110 - ((camX * 0.2) % 110), bh = 30 + ((i * 37 + Math.floor(camX * 0.2 / 110) * 37) % 50 + 50) % 50;
     ctx.fillRect(bx, FLOOR_TOP - 20 - bh, 90, bh + 20);
@@ -1463,10 +1459,11 @@ const TEACHER_LOOK = {
   science: { pants: '#555a63', stripe: '#555a63', top: '#f1f1ec', coat: true },
   pe: { pants: '#1f4aa8', stripe: '#f4f4f4', top: '#2a5bc8', band: true },
   coach: { pants: '#f1f1ec', stripe: '#1d2b5a', top: '#1d2b5a', hoops: true },
+  chief: { pants: '#2a2a30', stripe: '#2a2a30', top: '#2a2a30', tie: true, shinai: true },
 };
 function drawTeacher(e) {
   const look = TEACHER_LOOK[e.kind] || TEACHER_LOOK.normal;
-  const s = depthScale(e.y) * (e.kind === 'coach' ? 1.3 : 1);
+  const s = depthScale(e.y) * (e.type === 'b' ? 1.3 : 1);
   ctx.save();
   ctx.translate(e.x - camX, e.y);
   shadow(s);
@@ -1498,6 +1495,11 @@ function drawTeacher(e) {
   else { ctx.fillRect(-6, -72, 3, 2); ctx.fillRect(-7, -75, 5, 1.5); }
   if (look.coat && !e.down) { ctx.strokeStyle = '#222'; ctx.lineWidth = 1; ctx.strokeRect(-8, -73.5, 5, 4); }   // 眼鏡
   if (look.band) { ctx.fillStyle = '#f4f4f4'; ctx.fillRect(-9, -76, 18, 3); }                                  // 鉢巻き
+  if (look.tie) { ctx.fillStyle = '#f1f1ec'; ctx.fillRect(-3, -60, 6, 8); ctx.fillStyle = '#b3202a'; ctx.fillRect(-1.5, -58, 3, 14); }   // ワイシャツとネクタイ
+  if (look.shinai && !e.down) {   // 竹刀を振り上げる
+    ctx.strokeStyle = '#d8c48a'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(26, -63); ctx.lineTo(44, -110); ctx.stroke();
+  }
   // 笛
   ctx.strokeStyle = '#ddd'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-3, -64); ctx.lineTo(2, -50); ctx.stroke();
   ctx.fillStyle = '#c9c9c9'; ctx.fillRect(-11, -66, 5, 3);
