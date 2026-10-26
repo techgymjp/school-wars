@@ -182,20 +182,6 @@ button.big:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; 
   user-select: none;
   -webkit-user-select: none;
 }
-#touch .grp { display: flex; gap: 8px; }
-#touch button {
-  font-family: var(--f-display);
-  font-size: 16px;
-  width: 64px; height: 64px;
-  border-radius: 50%;
-  border: 2px solid var(--line);
-  background: var(--panel);
-  color: var(--paper);
-  touch-action: none;
-}
-#touch button.on { background: var(--red); border-color: var(--red); }
-#touch button[data-k="swing"] { width: 78px; height: 78px; border-color: var(--glass); }
-#touch button[data-k="horn"] { font-size: 12px; }
 .coarse #touch { display: flex; }
 .foot { font-family: var(--f-dot); font-size: 12px; color: var(--muted); margin: 0; text-align: center; }
 #mute { position: absolute; right: 10px; bottom: 8px; z-index: 3; font-family: var(--f-dot); font-size: 12px; padding: 4px 10px; background: rgba(0,0,0,.5); color: var(--paper); border: 1px solid var(--line); border-radius: 2px; cursor: pointer; }
@@ -205,8 +191,6 @@ button.big:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; 
   #game { border: 2px solid var(--line); box-sizing: border-box; }
   .overlay { position: static; background: none; }
   .card { grid-template-columns: minmax(0, 1fr); padding: 18px 0 8px; }
-  #touch button { width: 56px; height: 56px; font-size: 14px; }
-  #touch button[data-k="swing"] { width: 68px; height: 68px; }
 }
 .share { margin-top: 16px; display: grid; gap: 6px; }
 .share-label { font-family: var(--f-dot); font-size: 12px; color: var(--muted); letter-spacing: .14em; }
@@ -317,12 +301,6 @@ button.big:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; 
   }
   .coarse.in-menu #touch { display: none; }
   .coarse #touch .grp { pointer-events: auto; }
-  .coarse #touch .grp:first-child { flex-direction: column; margin-bottom: 44px; }
-  .coarse #touch .grp:last-child { display: grid; grid-template-columns: repeat(2, auto); }
-  .coarse #touch button,
-  .coarse #touch button[data-k="swing"] { width: 58px; height: 58px; font-size: 15px; background: rgba(25,26,36,.72); }
-  .coarse #touch button[data-k="horn"] { font-size: 11px; }
-  .coarse #touch button.on { background: var(--red); }
 }
 @media (prefers-reduced-motion: reduce) {
   button.big:active { transform: none; }
@@ -371,4 +349,117 @@ button.big:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; 
 @media (orientation: landscape) and (max-height: 520px) {
   /* メニュー画面では操作ボタンが出ないので、音のボタンは右下に置いて見出しと重ならないようにする */
   .coarse.in-menu #mute { top: auto; bottom: 6px; left: auto; right: 6px; transform: none; }
+}
+
+/* タイトル画面：見出しと 3 つのルールだけに絞る */
+.title-card { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: center; }
+.title-main .lead { margin-top: 10px; }
+.best { margin: 10px 0 0; font-family: var(--f-dot); font-size: 13px; color: var(--gold); }
+.tiles { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.tile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 14px;
+  align-items: center;
+  padding: 8px 12px 8px 8px;
+  background: rgba(255,255,255,.05);
+  border-left: 4px solid var(--line);
+}
+.tile canvas { grid-row: 1 / 3; border-radius: 2px; }
+.tile b { font-family: var(--f-display); font-weight: 400; font-size: 18px; line-height: 1.2; align-self: end; }
+.tile span { color: var(--muted); font-size: 14px; align-self: start; }
+.tile.g { border-color: var(--glass); } .tile.g b { color: var(--glass); }
+.tile.t { border-color: var(--gold); } .tile.t b { color: var(--gold); }
+.tile.s { border-color: var(--red); } .tile.s b { color: var(--red); }
+
+/* 遊び方ページ */
+#howto { align-items: flex-start; background: rgba(10,10,16,.94); }
+.howto { width: min(940px, 100%); box-sizing: border-box; padding: 20px 24px 24px; display: grid; gap: 14px; }
+.howto-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.howto-head h2 { font-family: var(--f-display); font-weight: 400; font-size: 30px; margin: 0; color: var(--paper); text-shadow: 2px 2px 0 var(--red); }
+.howto-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgba(255,255,255,.05);
+  border-left: 4px solid var(--line);
+}
+.step.wide { grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr); }
+.step.g { border-color: var(--glass); } .step.t { border-color: var(--gold); } .step.s { border-color: var(--red); }
+.step h3 { font-family: var(--f-display); font-weight: 400; font-size: 17px; margin: 0 0 4px; color: var(--paper); line-height: 1.35; text-wrap: balance; }
+.step.g h3 { color: var(--glass); } .step.t h3 { color: var(--gold); } .step.s h3 { color: var(--red); }
+.step p { margin: 0; color: var(--muted); font-size: 14px; }
+.step canvas { border-radius: 2px; }
+.ctl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 6px 0 0; align-items: center; }
+.ctl dt { white-space: nowrap; }
+.ctl dd { margin: 0; color: var(--muted); font-size: 14px; }
+.pill { display: inline-block; min-width: 2em; padding: 1px 8px; text-align: center; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); font-family: var(--f-display); font-size: 13px; }
+.touch-only { display: none; }
+.coarse .touch-only { display: grid; }
+.coarse .keys-only { display: none; }
+.ranks { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; max-width: 420px; font-variant-numeric: tabular-nums; }
+.ranks li { display: flex; justify-content: space-between; gap: 12px; padding: 3px 10px; background: rgba(255,255,255,.04); }
+.ranks li span:first-child { font-family: var(--f-display); }
+.ranks li span:last-child { font-family: var(--f-dot); color: var(--muted); }
+.howto-foot { justify-content: center; margin-top: 4px; }
+
+@media (max-width: 760px) {
+  .title-card { grid-template-columns: minmax(0, 1fr); }
+  .howto { padding: 16px 0; }
+  .howto-grid { grid-template-columns: minmax(0, 1fr); }
+  #howto { background: none; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .coarse .tiles { gap: 6px; }
+  .coarse .tile { padding: 4px 8px 4px 4px; column-gap: 10px; }
+  .coarse .tile canvas { width: 84px !important; height: 59px !important; }
+  .coarse .tile b { font-size: 15px; }
+  .coarse .tile span { font-size: 12px; }
+  .coarse #howto { position: absolute; background: rgba(10,10,16,.95); }
+  .coarse .howto { padding: 10px 14px 14px; gap: 8px; }
+  .coarse .howto-head h2 { font-size: 22px; }
+  .coarse .step { padding: 6px 8px; gap: 8px; }
+  .coarse .step canvas { width: 105px !important; height: 67px !important; }
+  .coarse .step h3 { font-size: 14px; }
+  .coarse .step p, .coarse .ctl dd { font-size: 12px; }
+}
+
+/* タッチ操作：左は ▲▼、右は上から「パラリラ」、「ブレーキ」「ダッシュ」、いちばん大きな「棍棒」 */
+#touch { --b: 64px; align-items: flex-end; touch-action: none; }
+#touch button {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 2px solid rgba(241,234,219,.35);
+  background: rgba(25,26,36,.78);
+  color: var(--paper);
+  font-family: var(--f-display);
+  font-size: 15px;
+  line-height: 1.1;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#touch button.on { background: var(--red); border-color: var(--red); }
+.pad { display: grid; gap: 8px; }
+.pad button { width: calc(var(--b) * 1.2); height: calc(var(--b) * 1.2); border-radius: 18px; font-size: 26px !important; }
+.act {
+  display: grid;
+  grid-template-columns: repeat(2, calc(var(--b) * 1.2));
+  grid-template-areas: "horn ." "brake dash" "swing swing";
+  gap: 8px;
+  justify-items: center;
+}
+.act .horn { grid-area: horn; width: 100%; height: calc(var(--b) * 0.7); border-radius: 999px; font-size: 13px; border-color: var(--red); }
+.act .brake { grid-area: brake; width: 100%; height: var(--b); border-radius: 16px; }
+.act .dash { grid-area: dash; width: 100%; height: var(--b); border-radius: 16px; border-color: var(--gold); }
+.act .swing { grid-area: swing; width: calc(var(--b) * 1.6); height: calc(var(--b) * 1.6); border-radius: 50%; font-size: 22px; border-color: var(--glass); }
+@media (orientation: landscape) and (max-height: 520px) {
+  /* 横持ちでは画面の高さに合わせて大きさを決める（高さ 390px なら 1 マス 60px 前後） */
+  .coarse #touch { --b: clamp(46px, 15.5vh, 70px); }
 }

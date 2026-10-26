@@ -16,7 +16,7 @@ const t = I18N.t;
 const STORE_KEY = 'rokabakuso.best.v1';
 
 const cv = document.getElementById('game');
-const ctx = cv.getContext('2d');
+let ctx = cv.getContext('2d');   // 遊び方ページの挿絵を描くときだけ一時的に差し替える
 const DPR = Math.min(2, window.devicePixelRatio || 1);
 cv.width = W * DPR; cv.height = H * DPR;
 
@@ -267,6 +267,7 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyM') { toggleMute(); return; }
   if ((e.code === 'Escape' || e.code === 'KeyP') && !e.repeat && canPause()) { e.preventDefault(); setPaused(!paused); return; }
   if (paused) { if (k || e.code === 'Enter') { e.preventDefault(); setPaused(false); } return; }
+  if (howtoOpen()) { if (e.code === 'Escape') { e.preventDefault(); closeHowto(); } return; }
   if (state === 'title' && (e.code === 'Enter' || e.code === 'Space') && document.activeElement?.tagName !== 'BUTTON') { e.preventDefault(); startGame(); return; }
   if (state === 'result' && (e.code === 'Enter' || e.code === 'Space') && !e.repeat && performance.now() > resultReadyAt && document.activeElement?.tagName !== 'BUTTON') { e.preventDefault(); retry(); return; }
   if (state === 'result' && e.code === 'Escape') { toTitle(); return; }
@@ -275,24 +276,138 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => { const k = KEYMAP[e.code]; if (k) keys[k] = false; });
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 
-document.querySelectorAll('#touch button').forEach(b => {
-  const k = b.dataset.k;
-  const on = e => {
+// タッチ操作：指を離さずにボタンからボタンへ滑らせても切り替わるよう、指ごとに今どのボタンの上にあるかを見る
+const touchBtns = [...document.querySelectorAll('#touch button')];
+const fingers = new Map();   // pointerId → 押しているボタンのキー（ボタンの外なら null）
+function keyAt(x, y) {
+  const el = document.elementFromPoint(x, y);
+  const b = el && el.closest ? el.closest('#touch button') : null;
+  return b ? b.dataset.k : null;
+}
+function syncTouch() {
+  const held = new Set(fingers.values());
+  touchBtns.forEach(b => {
+    const on = held.has(b.dataset.k);
+    keys[b.dataset.k] = on;
+    b.classList.toggle('on', on);
+  });
+}
+touchBtns.forEach(b => {
+  b.addEventListener('pointerdown', e => {
     e.preventDefault();
     if (paused) { setPaused(false); return; }
-    keys[k] = true; b.classList.add('on');
+    if (b.hasPointerCapture && b.hasPointerCapture(e.pointerId)) b.releasePointerCapture(e.pointerId);
+    fingers.set(e.pointerId, b.dataset.k);
+    syncTouch();
     if (state === 'title') startGame();
-  };
-  const off = e => { e.preventDefault(); keys[k] = false; b.classList.remove('on'); };
-  b.addEventListener('pointerdown', on);
-  b.addEventListener('pointerup', off);
-  b.addEventListener('pointerleave', off);
-  b.addEventListener('pointercancel', off);
+  });
   b.addEventListener('contextmenu', e => e.preventDefault());
 });
+addEventListener('pointermove', e => {
+  if (!fingers.has(e.pointerId)) return;
+  const k = keyAt(e.clientX, e.clientY);
+  if (k !== fingers.get(e.pointerId)) { fingers.set(e.pointerId, k); syncTouch(); }
+});
+const liftFinger = e => { if (fingers.delete(e.pointerId)) syncTouch(); };
+addEventListener('pointerup', liftFinger);
+addEventListener('pointercancel', liftFinger);
 
 // ---------- 画面遷移 ----------
 const elTitle = document.getElementById('title'), elResult = document.getElementById('result');
+const elHowto = document.getElementById('howto');
+document.getElementById('howtoBtn').addEventListener('click', openHowto);
+document.getElementById('howtoBack').addEventListener('click', closeHowto);
+document.getElementById('howtoStart').addEventListener('click', startGame);
+
+// ---------- 遊び方ページ ----------
+function howtoOpen() { return !elHowto.hidden; }
+function openHowto() {
+  elTitle.hidden = true; elHowto.hidden = false;
+  elHowto.scrollTop = 0;
+  paintSprites();
+  document.getElementById('howtoBack').focus({ preventScroll: true });
+}
+function closeHowto() {
+  elHowto.hidden = true; elTitle.hidden = false;
+  document.getElementById('howtoBtn').focus({ preventScroll: true });
+}
+// 称号の一覧（合計点の下限つき）
+const RANK_FROM = [0, 12000, 21000, 30000, 40000];
+function renderRanks() {
+  document.getElementById('rankList').innerHTML = RANK_FROM.map((n, i) =>
+    `<li><span>${t('rank.' + i)}</span><span>${t('h.rankFrom', { n: n.toLocaleString() })}</span></li>`).reverse().join('');
+}
+// タイトル画面の自己ベスト（記録がなければ出さない）
+function renderBest() {
+  const a = loadBest(), el = document.getElementById('bestLine');
+  el.hidden = !a.length;
+  if (a.length) el.textContent = t('title.best', { n: a[0].score.toLocaleString(), rank: rankOf(a[0].score) });
+}
+
+// 挿絵：ゲームと同じ描画処理で、小さなキャンバスに人物やバイクを描く
+function paintSprites() {
+  document.querySelectorAll('canvas.sprite').forEach(c => {
+    const w = +c.getAttribute('width'), h = +c.getAttribute('height');
+    if (!c.dataset.w) { c.dataset.w = w; c.dataset.h = h; c.style.width = w + 'px'; c.style.height = h + 'px'; c.width = w * DPR; c.height = h * DPR; }
+    const cw = +c.dataset.w, ch = +c.dataset.h;
+    const sctx = c.getContext('2d');
+    const savedCtx = ctx, savedCam = camX;
+    ctx = sctx; camX = 0;
+    // place(s, wx, wy, cx, cy)：世界座標 (wx, wy) をキャンバスの (cx, cy) に、倍率 s で置く
+    const place = (sc, wx, wy, cx, cy) => ctx.setTransform(DPR * sc, 0, 0, DPR * sc, DPR * (cx - sc * wx), DPR * (cy - sc * wy));
+    try {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, c.width, c.height);
+      SPRITES[c.dataset.sprite](place, cw, ch);
+    } finally {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx = savedCtx; camX = savedCam;
+    }
+  });
+}
+const demoStudent = (x, g, extra) => Object.assign({ type: 's', x, y: Y_MAX, mode: 'stand', g, dir: -1, phase: 1, panic: 0, scared: false, down: false, downT: 0, bubble: null }, extra);
+const demoTeacher = x => ({ type: 't', x, y: Y_MAX, dir: -1, phase: 1, alert: true, down: false, downT: 0, bubble: { text: t('say.hey'), t: 1 } });
+const demoBike = (x, extra) => Object.assign(newBike(), { x, y: Y_MAX, wheel: 0.4 }, extra);
+const SPRITES = {
+  glass(place, w, h) {
+    place(1, 0, 0, 0, 0);
+    ctx.fillStyle = C.wall; ctx.fillRect(0, 0, w, h);
+    drawWindow(10, 14, 44, 58, { broken: false, x: 0 }, C.room, true);
+    drawWindow(66, 14, 44, 58, { broken: true, x: 0, shards: genShards() }, C.room, true);
+  },
+  teacher(place, w, h) {
+    ctx.fillStyle = C.floorB; ctx.fillRect(0, 0, w * DPR, h * DPR);
+    const e = demoTeacher(0);
+    place(h < 90 ? 0.68 : 0.75, 0, Y_MAX, w / 2, h - 4); drawTeacher(e); drawBubble(e);
+  },
+  student(place, w, h) {
+    ctx.fillStyle = C.floorB; ctx.fillRect(0, 0, w * DPR, h * DPR);
+    const a = demoStudent(0, 1), b = demoStudent(30, 0);
+    place(0.9, 15, Y_MAX, w / 2, h - 6); drawStudent(a); drawStudent(b);
+  },
+  bike(place, w, h) {
+    ctx.fillStyle = C.floorB; ctx.fillRect(0, 0, w * DPR, h * DPR);
+    place(0.62, 0, Y_MAX, w / 2 + 6, h - 6); drawBike(demoBike(0));
+  },
+  reach(place, w, h) {
+    // 奥の壁の窓と、床の青い帯（木刀が届く範囲）
+    place(1, 0, 0, 0, 0);
+    ctx.fillStyle = C.wall; ctx.fillRect(0, 0, w, 40);
+    drawWindow(8, 6, 40, 28, { broken: true, x: 0, shards: genShards() }, C.room, true);
+    drawWindow(60, 6, 40, 28, { broken: false, x: 0 }, C.room, true);
+    drawWindow(112, 6, 40, 28, { broken: false, x: 0 }, C.room, true);
+    ctx.fillStyle = C.wains; ctx.fillRect(0, 40, w, 6);
+    ctx.fillStyle = C.floorB; ctx.fillRect(0, 46, w, h - 46);
+    ctx.fillStyle = 'rgba(160,215,235,.28)'; ctx.fillRect(0, 46, w, 22);
+    place(0.42, 0, Y_MAX, 46, 68); drawBike(demoBike(0, { swingT: 0.08, swingSide: -1 }));
+  },
+  horn(place, w, h) {
+    ctx.fillStyle = C.floorB; ctx.fillRect(0, 0, w * DPR, h * DPR);
+    const s1 = demoStudent(150, 1, { panic: 0.5, scared: true, bubble: { text: I18N.list('say.scream')[0], t: 1 } });
+    place(0.5, 0, Y_MAX, 44, h - 6); drawBike(demoBike(0));
+    drawStudent(s1); drawBubble(s1);
+  },
+};
 document.getElementById('startBtn').addEventListener('click', startGame);
 document.getElementById('againBtn').addEventListener('click', retry);
 document.getElementById('backBtn').addEventListener('click', toTitle);
@@ -316,6 +431,7 @@ function setPaused(v) {
   if (v && !canPause()) return;
   paused = v;
   for (const k in keys) keys[k] = false;
+  fingers.clear();
   document.querySelectorAll('#touch button.on').forEach(b => b.classList.remove('on'));
   if (v) silenceEngine();
   last = performance.now();
@@ -329,7 +445,8 @@ document.addEventListener('visibilitychange', () => {
 // Android の戻るボタン：プレイ中は一時停止の切り替え、タイトル・結果画面ではアプリを閉じる
 if (plugin('App')) {
   plugin('App').addListener('backButton', () => {
-    if (state === 'title' || state === 'result') plugin('App').exitApp();
+    if (howtoOpen()) closeHowto();
+    else if (state === 'title' || state === 'result') plugin('App').exitApp();
     else if (state === 'continue') giveUp();
     else setPaused(!paused);
   });
@@ -393,7 +510,7 @@ function startGame() {
   paused = false; continued = false;
   elCont.hidden = true;
   state = 'countdown';
-  elTitle.hidden = true; elResult.hidden = true;
+  elTitle.hidden = true; elResult.hidden = true; elHowto.hidden = true;
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   lastBeep = 4;
 }
@@ -402,7 +519,7 @@ function toTitle() {
   paused = false;
   root.classList.add('in-menu');
   elResult.hidden = true; elTitle.hidden = false;
-  renderBoard(document.getElementById('boardTitle'), -1);
+  renderBest();
   startDemo();
   document.getElementById('startBtn').focus({ preventScroll: true });
 }
@@ -542,7 +659,9 @@ document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click'
 I18N.onChange(() => {
   syncMute();
   labelShareNative();
-  renderBoard(document.getElementById('boardTitle'), -1);
+  renderBest();
+  renderRanks();
+  paintSprites();
 });
 
 // ---------- アプリ版の表示 ----------
@@ -711,11 +830,20 @@ function honk() {
   hornCD = 3.5;
   sfx.horn();
   popup(bike.x - 30, bike.y - 130, t('pop.horn'), '#e0333d', 22, 1.1);
+  // 前にいる生徒は悲鳴を上げて逃げ出し、廊下からいなくなる（立ちすくんでいた生徒も逃げる）
   for (const e of ents) {
     const ahead = e.x - bike.x;
-    if (e.type !== 's' || e.down || e.scared || ahead < 0 || ahead > 650) continue;
-    scare(e, 0.75);
+    if (e.type !== 's' || e.down || e.flee || ahead < -20 || ahead > 700) continue;
+    runAway(e);
   }
+}
+// 近いほうの壁へ走って逃げる。奥の壁なら教室に駆け込み、手前なら廊下の外へ出ていく
+function runAway(e) {
+  e.flee = true; e.fade = 1; e.panic = 0; e.scared = true;
+  const toFar = e.y < bike.y || (e.y === bike.y && e.y < (Y_MIN + Y_MAX) / 2);
+  e.fleeDir = toFar ? -1 : 1;
+  e.dir = 1;
+  e.bubble = { text: pick(I18N.list('say.scream')), t: 1 };
 }
 function scare(e, dur) {
   e.panic = dur; e.scared = true;
@@ -726,7 +854,7 @@ function scare(e, dur) {
 function collide() {
   if (bike.inv > 0) return;
   for (const e of ents) {
-    if (e.down) continue;
+    if (e.down || e.gone || e.fade < 0.6) continue;
     const dx = e.x - bike.x;
     if (dx < -30 || dx > 44 || Math.abs(e.y - bike.y) > 17) continue;
     if (e.type === 's') { hitStudent(e); return; }
@@ -735,7 +863,7 @@ function collide() {
 }
 function updateEnts(dt) {
   for (const e of ents) {
-    if (e.x < camX - 300 || e.x > camX + W + 260) continue;
+    if (e.gone || e.x < camX - 300 || e.x > camX + W + 260) continue;
     if (e.bubble) { e.bubble.t -= dt; if (e.bubble.t <= 0) e.bubble = null; }
     if (e.down) {
       e.downT += dt; e.x += e.vx * dt; e.vx *= Math.max(0, 1 - dt * 3.5);
@@ -745,7 +873,14 @@ function updateEnts(dt) {
     const live = state === 'play';
     if (e.type === 's') {
       if (live && !e.scared && ahead > 0 && ahead < 230 && Math.abs(e.y - bike.y) < 70) scare(e, 0.55);
-      if (e.panic > 0) {
+      if (e.flee) {
+        e.phase += dt * 18; e.x += 30 * dt;
+        e.y += e.fleeDir * 240 * dt;
+        if (e.fleeDir < 0 && e.y <= Y_MIN) { e.y = Y_MIN; e.fade -= dt * 3; }   // 教室に駆け込んで見えなくなる
+        if (e.fleeDir > 0 && e.y > Y_MAX + 70) e.gone = true;                  // 手前の壁の向こうへ
+        if (e.fade <= 0) e.gone = true;
+        continue;
+      } else if (e.panic > 0) {
         e.panic -= dt; e.phase += dt * 14;
         e.y += e.fleeDir * 125 * dt;
       } else if (e.scared) {
@@ -1001,7 +1136,8 @@ function drawStudent(e) {
     ctx.rotate(e.downT < 0.3 ? -e.downT * 4 : -1.2);
   }
   ctx.scale(e.dir, 1);
-  const moving = !e.down && (e.panic > 0 || (!e.scared && (e.mode === 'cross' || e.mode === 'walk')));
+  if (e.fade < 1) ctx.globalAlpha = Math.max(0, e.fade);
+  const moving = !e.down && (e.flee || e.panic > 0 || (!e.scared && (e.mode === 'cross' || e.mode === 'walk')));
   const ph = moving ? Math.sin(e.phase) * 5 : 0;
   const shiver = e.scared && !e.down ? Math.sin(clock * 50) * 0.8 : 0;
   ctx.translate(shiver, 0);
@@ -1270,7 +1406,9 @@ function drawHUD() {
   ctx.fillStyle = '#a9a294'; ctx.font = `10px ${FONT_DOT}`; ctx.textAlign = 'center';
   const staffW = ctx.measureText(t('hud.staff')).width;
   ctx.fillText(t('hud.staff'), Math.min(staffX, px + pw + 4 - staffW / 2), 60);
-  // 左下：速度計
+  // 速度計とパラリラ。タッチ操作では左下に ▲▼ が重なるので下の中央に出す
+  ctx.save();
+  if (root.classList.contains('coarse')) ctx.translate((W - 350) / 2 - 10, 0);
   ctx.fillStyle = 'rgba(12,12,18,.8)'; ctx.fillRect(10, H - 46, 250, 38);
   const kmh = Math.round(bike.v * 0.12);
   ctx.textAlign = 'left'; ctx.fillStyle = '#f1eadb'; ctx.font = `22px ${FONT_DOT}`;
@@ -1287,6 +1425,7 @@ function drawHUD() {
   ctx.fillStyle = hk >= 1 ? '#e0333d' : '#5a5b70'; ctx.font = `12px ${FONT_DOT}`; ctx.fillText(t('hud.horn'), 278, H - 30);
   ctx.fillStyle = '#34354a'; ctx.fillRect(278, H - 22, 72, 5);
   ctx.fillStyle = hk >= 1 ? '#e0333d' : '#8a8ba0'; ctx.fillRect(278, H - 22, 72 * hk, 5);
+  ctx.restore();
   // コンボ
   if (combo >= 2 && runT - lastBreak < 1.2 && state === 'play') {
     const a = clamp((1.2 - (runT - lastBreak)) * 2, 0, 1);
@@ -1328,7 +1467,10 @@ function frame(now) {
   render();
   requestAnimationFrame(frame);
 }
-renderBoard(document.getElementById('boardTitle'), -1);
+renderBest();
+renderRanks();
+paintSprites();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(paintSprites);
 startDemo();
 requestAnimationFrame(frame);
 // テスト用の小さな窓口

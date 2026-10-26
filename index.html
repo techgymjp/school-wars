@@ -18,39 +18,94 @@
     <button id="mute" type="button">音：ON</button>
 
     <section id="title" class="overlay">
-      <div class="card">
-        <div>
+      <div class="card title-card">
+        <div class="title-main">
           <p class="eyebrow" data-i18n="title.eyebrow">昭和59年 ・ 某県立高校 ・ 三階廊下</p>
           <h1 data-i18n="title.name">廊下爆走伝</h1>
           <p class="tagline" data-i18n="title.tagline">ガラスを割れ。生徒は轢くな。</p>
-          <p class="lead" data-i18n="title.lead">放課後の廊下を族車で駆け抜け、窓ガラスを木刀で片っ端から叩き割れ。長さ140メートルの廊下を、速く、そして多く。</p>
+          <p class="lead" data-i18n="title.lead">バイクで廊下を駆け抜けて、窓ガラスを割りまくれ。</p>
           <div class="actions">
             <button id="startBtn" class="big" type="button" data-i18n="title.start">エンジン始動</button>
+            <button id="howtoBtn" class="ghost" type="button" data-i18n="title.howto">遊び方</button>
           </div>
+          <p class="best" id="bestLine" hidden></p>
           <p class="lang-sel" role="group" aria-label="Language">
             <button type="button" class="lang-btn" data-lang="ja" aria-pressed="true">日本語</button>
             <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">English</button>
           </p>
         </div>
-        <div style="display:grid;gap:16px;min-width:0">
-          <ul class="rules">
-            <li class="g"><b data-i18n="rule.glass">ガラス</b><span data-i18n="rule.glassD">割ると +100点。続けて割るとコンボで加点</span></li>
-            <li class="t"><b data-i18n="rule.teacher">先生</b><span data-i18n="rule.teacherD">轢くとスピードが大きく落ちる。通せんぼしてくる</span></li>
-            <li class="s"><b data-i18n="rule.student">生徒</b><span data-i18n="rule.studentD">轢いたら一発アウト。失格で記録は残らない</span></li>
-          </ul>
-          <p class="keys" data-i18n-html="title.keys">
-            <kbd>↑</kbd><kbd>↓</kbd> 廊下の奥／手前へ　<kbd>→</kbd> アクセル　<kbd>←</kbd> ブレーキ<br>
-            <kbd>Space</kbd> 木刀を振る（壁ぎわで窓が割れる）<br>
-            <kbd>X</kbd> パラリラ（生徒がよける）　<kbd>M</kbd> 音のオンオフ
-          </p>
-          <p class="touch-help" data-i18n="title.touchHelp">左の ▲▼ で廊下の奥／手前へ。右の「振る」で窓を割り、「速」で加速、「止」でブレーキ、「パラリラ」で生徒をどかす。</p>
-          <div class="board" id="boardTitle"></div>
-        </div>
+        <ul class="tiles">
+          <li class="tile g"><canvas class="sprite" data-sprite="glass" width="120" height="84" aria-hidden="true"></canvas><b data-i18n="tile.glass">ガラスを割る</b><span data-i18n="tile.glassD">壁ぎわで木刀を振る</span></li>
+          <li class="tile t"><canvas class="sprite" data-sprite="teacher" width="120" height="84" aria-hidden="true"></canvas><b data-i18n="tile.teacher">先生は減速</b><span data-i18n="tile.teacherD">ぶつかると遅くなる</span></li>
+          <li class="tile s"><canvas class="sprite" data-sprite="student" width="120" height="84" aria-hidden="true"></canvas><b data-i18n="tile.student">生徒はアウト</b><span data-i18n="tile.studentD">絶対に轢かない</span></li>
+        </ul>
         <p class="legal" id="legal" hidden>
           <span id="buildInfo"></span>
           <a href="https://techgym.jp/privacy-policy/" data-i18n-href="url.privacy" target="_blank" rel="noopener" data-i18n="legal.privacy">プライバシーポリシー</a>
           <span id="adPrivacy" hidden>｜<a href="#" id="adPrivacyLink" data-i18n="legal.adSettings">広告の設定</a></span>
         </p>
+      </div>
+    </section>
+
+    <section id="howto" class="overlay" hidden aria-labelledby="howtoTitle">
+      <div class="howto">
+        <div class="howto-head">
+          <h2 id="howtoTitle" data-i18n="howto.title">遊び方</h2>
+          <button id="howtoBack" class="ghost" type="button" data-i18n="howto.back">もどる</button>
+        </div>
+        <div class="howto-grid">
+          <article class="step">
+            <canvas class="sprite" data-sprite="bike" width="150" height="96" aria-hidden="true"></canvas>
+            <div><h3 data-i18n="h.goal.t">140m の廊下を走り抜ける</h3><p data-i18n="h.goal.d"></p></div>
+          </article>
+          <article class="step g">
+            <canvas class="sprite" data-sprite="reach" width="150" height="96" aria-hidden="true"></canvas>
+            <div><h3 data-i18n="h.glass.t"></h3><p data-i18n="h.glass.d"></p></div>
+          </article>
+          <article class="step t">
+            <canvas class="sprite" data-sprite="teacher" width="150" height="96" aria-hidden="true"></canvas>
+            <div><h3 data-i18n="h.teacher.t"></h3><p data-i18n="h.teacher.d"></p></div>
+          </article>
+          <article class="step s">
+            <canvas class="sprite" data-sprite="student" width="150" height="96" aria-hidden="true"></canvas>
+            <div><h3 data-i18n="h.student.t"></h3><p data-i18n="h.student.d"></p></div>
+          </article>
+          <article class="step">
+            <canvas class="sprite" data-sprite="horn" width="150" height="96" aria-hidden="true"></canvas>
+            <div><h3 data-i18n="h.horn.t"></h3><p data-i18n="h.horn.d"></p></div>
+          </article>
+          <article class="step wide">
+            <div>
+              <h3 data-i18n="h.ctl.t">操作</h3>
+              <dl class="ctl keys-only">
+                <dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd data-i18n="c.move"></dd>
+                <dt><kbd>→</kbd></dt><dd data-i18n="c.accel"></dd>
+                <dt><kbd>←</kbd></dt><dd data-i18n="c.brake"></dd>
+                <dt><kbd>Space</kbd></dt><dd data-i18n="c.swing"></dd>
+                <dt><kbd>X</kbd></dt><dd data-i18n="c.horn"></dd>
+                <dt><kbd>P</kbd> <kbd>Esc</kbd></dt><dd data-i18n="c.pause"></dd>
+                <dt><kbd>M</kbd></dt><dd data-i18n="c.sound"></dd>
+              </dl>
+              <dl class="ctl touch-only">
+                <dt><span class="pill">▲</span> <span class="pill">▼</span></dt><dd data-i18n="c.move"></dd>
+                <dt><span class="pill" data-i18n="tb.accel">ダッシュ</span></dt><dd data-i18n="c.accel"></dd>
+                <dt><span class="pill" data-i18n="tb.brake">ブレーキ</span></dt><dd data-i18n="c.brake"></dd>
+                <dt><span class="pill" data-i18n="tb.swing">振る</span></dt><dd data-i18n="c.swing"></dd>
+                <dt><span class="pill" data-i18n="tb.horn">パラリラ</span></dt><dd data-i18n="c.horn"></dd>
+              </dl>
+            </div>
+          </article>
+          <article class="step wide">
+            <div>
+              <h3 data-i18n="h.score.t">スコアと称号</h3>
+              <p data-i18n="h.score.d"></p>
+              <ol class="ranks" id="rankList"></ol>
+            </div>
+          </article>
+        </div>
+        <div class="actions howto-foot">
+          <button id="howtoStart" class="big" type="button" data-i18n="title.start">エンジン始動</button>
+        </div>
       </div>
     </section>
 
@@ -98,15 +153,15 @@
   </div>
 
   <div id="touch" aria-label="タッチ操作">
-    <div class="grp">
-      <button type="button" data-k="up" aria-label="奥へ" data-i18n-aria="tb.up">▲</button>
-      <button type="button" data-k="down" aria-label="手前へ" data-i18n-aria="tb.down">▼</button>
+    <div class="grp pad">
+      <button type="button" class="up" data-k="up" aria-label="奥へ" data-i18n-aria="tb.up">▲</button>
+      <button type="button" class="dn" data-k="down" aria-label="手前へ" data-i18n-aria="tb.down">▼</button>
     </div>
-    <div class="grp">
-      <button type="button" data-k="horn" data-i18n-html="tb.horn">パラ<br>リラ</button>
-      <button type="button" data-k="brake" data-i18n="tb.brake">止</button>
-      <button type="button" data-k="accel" data-i18n="tb.accel">速</button>
-      <button type="button" data-k="swing" data-i18n="tb.swing">振る</button>
+    <div class="grp act">
+      <button type="button" class="horn" data-k="horn" data-i18n="tb.horn">パラリラ</button>
+      <button type="button" class="brake" data-k="brake" data-i18n="tb.brake">ブレーキ</button>
+      <button type="button" class="dash" data-k="accel" data-i18n="tb.accel">ダッシュ</button>
+      <button type="button" class="swing" data-k="swing" data-i18n="tb.swing">棍棒</button>
     </div>
   </div>
   <div id="rotate" role="dialog" aria-label="横向きのおすすめ">
