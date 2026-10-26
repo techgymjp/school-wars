@@ -76,12 +76,23 @@
           </article>
           <article class="step wide">
             <div>
+              <h3 data-i18n="h.stages.t">5つの面を3周する</h3>
+              <p data-i18n="h.stages.d"></p>
+              <ol class="stage-list">
+                <li><b data-i18n="stage.f1"></b><span data-i18n="intro.f1"></span></li>
+                <li><b data-i18n="stage.f2"></b><span data-i18n="intro.f2"></span></li>
+                <li><b data-i18n="stage.f3"></b><span data-i18n="intro.f3"></span></li>
+                <li><b data-i18n="stage.gym"></b><span data-i18n="intro.gym"></span></li>
+                <li><b data-i18n="stage.roof"></b><span data-i18n="intro.roof"></span></li>
+              </ol>
+            </div>
+          </article>
+          <article class="step wide">
+            <div>
               <h3 data-i18n="h.ctl.t">操作</h3>
               <dl class="ctl keys-only">
                 <dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd data-i18n="c.move"></dd>
-                <dt><kbd>→</kbd></dt><dd data-i18n="c.accel"></dd>
-                <dt><kbd>←</kbd></dt><dd data-i18n="c.brake"></dd>
-                <dt><kbd>Space</kbd></dt><dd data-i18n="c.swing"></dd>
+                <dt><kbd>→</kbd> <kbd>Space</kbd></dt><dd data-i18n="c.accel"></dd>
                 <dt><kbd>X</kbd></dt><dd data-i18n="c.horn"></dd>
                 <dt><kbd>P</kbd> <kbd>Esc</kbd></dt><dd data-i18n="c.pause"></dd>
                 <dt><kbd>M</kbd></dt><dd data-i18n="c.sound"></dd>
@@ -89,10 +100,9 @@
               <dl class="ctl touch-only">
                 <dt><span class="pill">▲</span> <span class="pill">▼</span></dt><dd data-i18n="c.move"></dd>
                 <dt><span class="pill" data-i18n="tb.accel">ダッシュ</span></dt><dd data-i18n="c.accel"></dd>
-                <dt><span class="pill" data-i18n="tb.brake">ブレーキ</span></dt><dd data-i18n="c.brake"></dd>
-                <dt><span class="pill" data-i18n="tb.swing">振る</span></dt><dd data-i18n="c.swing"></dd>
                 <dt><span class="pill" data-i18n="tb.horn">パラリラ</span></dt><dd data-i18n="c.horn"></dd>
               </dl>
+              <p class="ctl-note" data-i18n="c.auto"></p>
             </div>
           </article>
           <article class="step wide">
@@ -120,6 +130,18 @@
           <button id="contGiveUp" class="ghost" type="button" data-i18n="cont.giveUp">あきらめる</button>
         </div>
         <p class="result-note" id="contNote"></p>
+      </div>
+    </section>
+
+    <section id="clear" class="overlay" hidden>
+      <div class="cont-card clear-card">
+        <p class="eyebrow" id="clearEyebrow"></p>
+        <p class="result-head goal" data-i18n="clear.head">面クリア！</p>
+        <div class="stats"><dl id="clearStats"></dl></div>
+        <p class="clear-next" id="clearNext"></p>
+        <div class="actions">
+          <button id="nextBtn" class="big" type="button" data-i18n="clear.next">次の面へ</button>
+        </div>
       </div>
     </section>
 
@@ -153,15 +175,13 @@
   </div>
 
   <div id="touch" aria-label="タッチ操作">
+    <div class="grp act">
+      <button type="button" class="horn" data-k="horn" data-i18n="tb.horn">パラリラ</button>
+      <button type="button" class="dash" data-k="accel" data-i18n="tb.accel">ダッシュ</button>
+    </div>
     <div class="grp pad">
       <button type="button" class="up" data-k="up" aria-label="奥へ" data-i18n-aria="tb.up">▲</button>
       <button type="button" class="dn" data-k="down" aria-label="手前へ" data-i18n-aria="tb.down">▼</button>
-    </div>
-    <div class="grp act">
-      <button type="button" class="horn" data-k="horn" data-i18n="tb.horn">パラリラ</button>
-      <button type="button" class="brake" data-k="brake" data-i18n="tb.brake">ブレーキ</button>
-      <button type="button" class="dash" data-k="accel" data-i18n="tb.accel">ダッシュ</button>
-      <button type="button" class="swing" data-k="swing" data-i18n="tb.swing">棍棒</button>
     </div>
   </div>
   <div id="rotate" role="dialog" aria-label="横向きのおすすめ">

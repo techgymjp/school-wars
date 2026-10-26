@@ -428,7 +428,7 @@ button.big:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; 
   .coarse .step p, .coarse .ctl dd { font-size: 12px; }
 }
 
-/* タッチ操作：左は ▲▼、右は上から「パラリラ」、「ブレーキ」「ダッシュ」、いちばん大きな「棍棒」 */
+/* タッチ操作：左は上に「パラリラ」、下に大きな「ダッシュ」。右は ▲▼。木刀は自動で振る */
 #touch { --b: 64px; align-items: flex-end; touch-action: none; }
 #touch button {
   margin: 0;
@@ -446,20 +446,63 @@ button.big:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; 
   -webkit-user-select: none;
 }
 #touch button.on { background: var(--red); border-color: var(--red); }
-.pad { display: grid; gap: 8px; }
-.pad button { width: calc(var(--b) * 1.2); height: calc(var(--b) * 1.2); border-radius: 18px; font-size: 26px !important; }
-.act {
-  display: grid;
-  grid-template-columns: repeat(2, calc(var(--b) * 1.2));
-  grid-template-areas: "horn ." "brake dash" "swing swing";
-  gap: 8px;
-  justify-items: center;
-}
-.act .horn { grid-area: horn; width: 100%; height: calc(var(--b) * 0.7); border-radius: 999px; font-size: 13px; border-color: var(--red); }
-.act .brake { grid-area: brake; width: 100%; height: var(--b); border-radius: 16px; }
-.act .dash { grid-area: dash; width: 100%; height: var(--b); border-radius: 16px; border-color: var(--gold); }
-.act .swing { grid-area: swing; width: calc(var(--b) * 1.6); height: calc(var(--b) * 1.6); border-radius: 50%; font-size: 22px; border-color: var(--glass); }
+.act, .pad { display: grid; gap: 10px; justify-items: center; }
+.act .horn { width: calc(var(--b) * 1.5); height: calc(var(--b) * 0.8); border-radius: 999px; font-size: 14px; border-color: var(--red); }
+.act .dash { width: calc(var(--b) * 1.6); height: calc(var(--b) * 1.6); border-radius: 50%; font-size: 20px; border-color: var(--gold); }
+.pad button { width: calc(var(--b) * 1.3); height: calc(var(--b) * 1.2); border-radius: 18px; font-size: 28px; }
 @media (orientation: landscape) and (max-height: 520px) {
   /* 横持ちでは画面の高さに合わせて大きさを決める（高さ 390px なら 1 マス 60px 前後） */
-  .coarse #touch { --b: clamp(46px, 15.5vh, 70px); }
+  .coarse #touch { --b: clamp(48px, 16vh, 72px); }
 }
+
+/* タイトル画面：見出しは上にまとめ、下はデモのバイクが見えるように暗幕を薄くしていく */
+#title {
+  align-items: flex-start;
+  background: linear-gradient(180deg, rgba(10,10,16,.94) 0%, rgba(10,10,16,.86) 46%, rgba(10,10,16,.35) 62%, rgba(10,10,16,0) 74%);
+}
+#title .title-card { padding-top: 22px; align-items: start; }
+#title .legal { position: absolute; left: 12px; bottom: 8px; margin: 0; padding: 2px 8px; background: rgba(10,10,16,.65); border-radius: 2px; }
+.tile canvas { width: 96px !important; height: 67px !important; }
+.tiles { gap: 8px; }
+
+/* 遊び方：面の一覧 */
+.stage-list { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 4px; counter-reset: st; }
+.stage-list li { display: grid; grid-template-columns: 2.2em 11em minmax(0, 1fr); gap: 8px; align-items: baseline; padding: 4px 10px; background: rgba(255,255,255,.04); counter-increment: st; }
+.stage-list li::before { content: counter(st); font-family: var(--f-display); color: var(--gold); }
+.stage-list b { font-family: var(--f-display); font-weight: 400; }
+.stage-list span { color: var(--muted); font-size: 14px; }
+
+/* 面クリア */
+.clear-card { width: min(440px, 100%); }
+.clear-card .stats { width: 100%; }
+.clear-next { margin: 4px 0 0; color: var(--paper); white-space: pre-line; font-weight: 700; }
+
+/* 遊び方の文章は読みやすい大きさと明るさに */
+.step p, .ctl dd, .stage-list span { color: #d6cfc1; font-size: 15px; line-height: 1.7; }
+
+@media (max-width: 760px) {
+  #title { background: none; }
+  #title .legal { position: static; background: none; padding: 0; }
+  .stage-list li { grid-template-columns: 2em minmax(0, 1fr); }
+  .stage-list span { grid-column: 2; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .coarse #title .title-card { padding-top: 12px; gap: 6px 18px; }
+  .coarse .tile canvas { width: 66px !important; height: 46px !important; }
+  .coarse .tile { padding: 3px 8px 3px 3px; }
+  .coarse .tile b { font-size: 14px; }
+  .coarse .tile span { font-size: 12px; }
+  .coarse .best { margin-top: 6px; }
+  /* 遊び方は 1 列にして、文字を大きく */
+  .coarse .howto-grid { grid-template-columns: minmax(0, 1fr); }
+  .coarse .step { grid-template-columns: 120px minmax(0, 1fr); padding: 8px 10px; }
+  .coarse .step.wide { grid-template-columns: minmax(0, 1fr); }
+  .coarse .step canvas { width: 120px !important; height: 77px !important; }
+  .coarse .step h3 { font-size: 16px; }
+  .coarse .step p, .coarse .ctl dd, .coarse .stage-list span { font-size: 15px; line-height: 1.6; }
+  .coarse .clear-card { padding: 8px; gap: 2px; }
+  .coarse .clear-card .result-head { font-size: 34px; }
+  .coarse .clear-card .stats dl { gap: 1px 14px; font-size: 13px; }
+  .coarse .clear-next { font-size: 13px; }
+}
+.ctl-note { margin: 8px 0 0; color: #d6cfc1; font-size: 14px; }
