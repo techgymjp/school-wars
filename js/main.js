@@ -1111,7 +1111,11 @@ function updateBoss(e, dt) {
   const sp = 120 + 45 * lap;
   e.y = clamp(e.y + clamp(bike.y - e.y, -sp * dt, sp * dt), Y_MIN, Y_MAX);
   e.x -= 70 * dt;
-  if (!e.bubble && !e.spoke) { e.spoke = true; e.bubble = { text: bossLine(e), t: 1.3 }; sfx.whistle(); }
+  // 立ちはだかっているあいだは、数秒おきに叫ぶ（最初のひと声で笛も鳴らす）
+  if (!e.bubble && (!e.spoke || clock - e.saidAt > 2.5)) {
+    if (!e.spoke) sfx.whistle();
+    e.spoke = true; e.saidAt = clock; e.bubble = { text: bossLine(e), t: 1.6 };
+  }
   // 振り切った
   if (e.x < bike.x - 50) {
     bonusPts += PASS_PTS;
