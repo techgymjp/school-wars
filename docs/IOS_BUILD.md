@@ -8,7 +8,7 @@
 - 対応端末：iPhone（横画面固定）。iPad では iPhone 用の画面で動きます
 - 広告：AdMob（iOS 用のアプリと広告ユニット）。起動時に「トラッキングの許可」の確認画面が出ます。全画面広告（プレイ前・タイトルへ戻る前・もう一回の前）、リワード広告（アウト後の続行）、バナー（タイトル・遊び方・面クリア・結果の画面の下）を出します
 - 審査では**実機（iPhone）での操作の録画**を求められます（6 章）
-- AdMob の ID：iOS 用のアプリ ID は `ios/App/App/Info.plist` の `GADApplicationIdentifier`、広告ユニット ID は `js/ads.js` の `UNITS.ios.production` に入れます（未設定のあいだは、アプリ ID は Google のテスト用、本番の広告は出ません）
+- AdMob の ID：iOS 用のアプリ ID は `ios/App/App/Info.plist` の `GADApplicationIdentifier`、広告ユニット ID は `js/ads.js` の `UNITS.ios.production` に入れます（ID が空の種類の広告は、App Store 版では出ません）
 
 ---
 
