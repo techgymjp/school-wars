@@ -83,7 +83,7 @@ npm run ios:open
 | --- | --- |
 | スクリーンショット | 「Dynamic Island 搭載 iPhone（中型ディスプレイ）」の欄に、`docs/store/ios/6.3inch/` の 2622 × 1206（横向き）を入れる。日本語版（ja-）と英語版（en-）各 4 枚。6.9 インチ（2868 × 1320）は受け付けられなかった |
 | ヘッダ・検索結果 | 「ヘッダと検索結果」タブに `docs/store/ios/appstore-header-3840x1646.png` と `appstore-search-3840x2560.png` |
-| プロモーション用テキスト・概要・キーワード | Google Play 用の文章（`docs/store/listing.md`、英語は `docs/store/listing-en.txt`）を流用。名前は日本語「廊下爆走伝」、英語「Hallway Rampage」 |
+| プロモーション用テキスト・概要・キーワード | `docs/store/ios/appstore.md` にまとめてある（日英）。元は Google Play 用の文章（`docs/store/listing.md`、英語は `docs/store/listing-en.txt`）を流用。名前は日本語「廊下爆走伝」、英語「Hallway Rampage」 |
 | サポート URL | https://techgym.jp/ |
 | プライバシーポリシー URL（App 情報） | https://techgym.jp/privacy-policy/ |
 | 著作権 | 2026 TECH GYM K.K. |
