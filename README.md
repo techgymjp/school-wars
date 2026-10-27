@@ -2,7 +2,7 @@
 
 ドラマ「スクール☆ウォーズ」で暴走族がバイクで校舎の廊下を走り回り、窓ガラスを割りまくる名場面をモチーフにしたブラウザゲームです。
 
-`index.html` をブラウザで開くだけで遊べます（ビルド不要・外部ライブラリなし）。Android アプリ版もあります（下記）。
+`index.html` をブラウザで開くだけで遊べます（ビルド不要・外部ライブラリなし）。Android アプリ版と iOS アプリ版もあります（下記）。
 
 タイトル画面には大事なルールを 3 つだけ載せ、詳しい説明は「遊び方」ページ（絵つき）にまとめています。
 
@@ -70,16 +70,18 @@
 
 ### 広告（Google AdMob）
 
-Android アプリでのみ広告を表示します（Web 版には広告は出ません）。
+Android / iOS アプリでのみ広告を表示します（Web 版には広告は出ません）。
 
 | 広告 | タイミング |
 | --- | --- |
 | インタースティシャル（全画面） | 毎回：「エンジン始動」でプレイを始める前、結果画面の「もう一回」の前、「タイトルへ」でタイトルに戻る前 |
+| バナー | タイトル・遊び方・面クリア・結果の画面の下（プレイ中は操作ボタンと重なるので隠す） |
 | リワード | 生徒を轢いてアウトになったとき「広告を見て続行」を選ぶと、その場から走り直せる（1 ゲーム 1 回まで、10 秒で自動的に結果画面へ） |
 
 - EU・英国など同意が必要な地域では、初回起動時に Google の同意確認画面が出ます。その地域では、タイトル画面の「広告の設定」から同意内容をいつでも変更できます。
 - AdMob のアプリ ID は `android/app/src/main/res/values/strings.xml` の `admob_app_id` にあります。
-- 広告ユニット ID（インタースティシャル・リワード）は `js/ads.js` の `UNITS.production` にあります。
+- 広告ユニット ID（インタースティシャル・リワード・バナー）は `js/ads.js` の `UNITS.android.production` / `UNITS.ios.production` にあります。
+- iOS では、同意確認のあとに App Tracking Transparency（トラッキングの許可）の確認画面が出ます。
 - 動作確認用 APK（Release の `school-wars.apk`）は常に **Google のテスト広告** を表示します。自分でタップしても問題ありません。
 - Google Play 用の .aab をビルドするときだけ、CI が `ADMOB_MODE=production` で本番の広告に切り替えます（`scripts/build-web.js` が `js/ads-config.js` を書き換えます）。
 - 本番の広告を自分でタップするとアカウント停止の対象になるので注意してください。
@@ -130,6 +132,20 @@ npx @capacitor/assets generate --android --iconBackgroundColor '#0f1016' --iconB
 
 バージョン番号（versionCode）は Actions の実行回数が自動で使われます。表示用のバージョン名は `package.json` の `version` です。
 
+## iOS 版（App Store 配布用）
+
+Android 版と同じ Capacitor で、`ios/` に iOS のプロジェクトがあります（Bundle ID `jp.techgym.schoolwars`、iPhone・横画面固定）。ビルドと App Store への提出は Mac で行います。手順は [docs/IOS_BUILD.md](docs/IOS_BUILD.md) にまとめています。
+
+```bash
+npm run ios:sync      # Web ファイルを iOS プロジェクトへコピー（テスト広告）
+npm run ios:release   # 本番の広告 ID でコピー（App Store 用）
+npm run ios:open      # Xcode で開く
+```
+
+- GitHub Actions の「iOS build」は、署名なしでシミュレータ用にビルドできるかだけを確かめます。Mac の実行時間は料金が高いので、`ios/` やパッケージの設定を変えたときだけ動きます（手動でも実行できます）
+- App Store 用の画像は `docs/store/ios/`（スクリーンショット 2622×1206 は `6.3inch/` に日英各 4 枚、ヘッダ 3840×1646、検索結果 3840×2560）
+- 審査では実機（iPhone）での操作の録画が必要です（`docs/IOS_BUILD.md` の 6 章）
+
 ## ライセンス
 
 All rights reserved. 著作権はテックジム株式会社に帰属します。無断での複製・改変・再配布、Web サイトやアプリとしての公開を禁止します。ただし、テックジムの受講生が学習目的で複製・改変することは許可します（商用利用は不可。詳しくは `LICENSE`）。
@@ -141,10 +157,11 @@ index.html        画面の骨組み
 css/style.css     見た目（スマホの横画面・縦画面の切り替えを含む）
 js/main.js        ゲーム本体（描画・操作・効果音・シェア）
 js/i18n.js        表示言語（日本語 / 英語）の文言
-js/ads.js         Google AdMob 広告（Android アプリのみ）
+js/ads.js         Google AdMob 広告（Android / iOS アプリのみ）
 js/ads-config.js  広告のモード（ビルド時に生成）
 js/build-info.js  アプリのバージョン表示（ビルド時に生成）
 assets/           アイコンと起動画面の元画像
 android/          Android アプリのプロジェクト（Capacitor）
+ios/              iOS アプリのプロジェクト（Capacitor）
 scripts/          Android に同梱する Web ファイルを www/ にまとめるスクリプトと、アイコンの元画像を描くスクリプト
 ```

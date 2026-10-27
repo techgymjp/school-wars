@@ -50,7 +50,12 @@ const plugin = name => (NATIVE && window.Capacitor.Plugins ? window.Capacitor.Pl
 if (NATIVE) root.classList.add('native');
 const COARSE = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
 if (COARSE) root.classList.add('coarse');
-root.classList.add('in-menu');
+// メニュー画面（タイトル・遊び方・面クリア・結果）かどうか。メニューではタッチボタンを隠し、バナー広告を出す
+function setMenu(on) {
+  root.classList.toggle('in-menu', on);
+  Ads.setBanner(on);
+}
+setMenu(true);
 
 // ---------- スマホの向き ----------
 const mqPortrait = window.matchMedia ? matchMedia('(orientation: portrait)') : null;
@@ -97,6 +102,7 @@ let glass = 0, glassScore = 0, combo = 0, maxCombo = 0, lastBreak = -9, teacherH
 let bonusPts = 0, fled = 0, runScore = 0, runTime = 0, runGlass = 0, runFled = 0;
 let crashT = 0, finishT = 0, resultShown = false, hornCD = 0, resultReadyAt = 0;
 let paused = false, continued = false, contT = 0;
+let noHud = false;   // ストア用の画像を撮るときに、HUD と文字の演出を消す
 const keys = { up: false, down: false, accel: false, horn: false };
 if (mqPortrait) {
   if (mqPortrait.addEventListener) mqPortrait.addEventListener('change', syncOrient);
@@ -533,7 +539,7 @@ function showContinue() {
   contNote.textContent = '';
   document.getElementById('contCount').textContent = '10';
   elCont.hidden = false;
-  root.classList.add('in-menu');
+  setMenu(true);
   setTimeout(() => { if (state === 'continue') contWatch.focus({ preventScroll: true }); }, 50);
 }
 function giveUp() {
@@ -556,7 +562,7 @@ contWatch.addEventListener('click', async () => {
   }
   if (result !== 'rewarded') { giveUp(); return; }
   elCont.hidden = true;
-  root.classList.remove('in-menu');
+  setMenu(false);
   continued = true;
   // 起き上がって再出発。少しのあいだは誰にもぶつからない
   bike.rot = 0; bike.v = 160; bike.stun = 0; bike.inv = 2;
@@ -576,7 +582,7 @@ function startGame() {
 }
 // いまの面（lap, stageIdx）を最初から始める
 function startStage() {
-  root.classList.remove('in-menu');
+  setMenu(false);
   stage = STAGES[stageIdx]; course = stage.len;
   buildCourse(true);
   bike = newBike();
@@ -620,7 +626,7 @@ function showClear() {
   if (nl !== lap) next += '\n' + t('clear.lapUp', { n: nl }) + '\n' + t(nl === 2 ? 'clear.lap2' : 'clear.lap3');
   document.getElementById('clearNext').textContent = next;
   elClear.hidden = false;
-  root.classList.add('in-menu');
+  setMenu(true);
   clearReadyAt = performance.now() + 700;
   setTimeout(() => { if (state === 'clear') document.getElementById('nextBtn').focus({ preventScroll: true }); }, 50);
 }
@@ -633,7 +639,7 @@ function nextStage() {
 function toTitle() {
   state = 'title';
   paused = false;
-  root.classList.add('in-menu');
+  setMenu(true);
   elResult.hidden = true; elTitle.hidden = false;
   renderBest();
   startDemo();
@@ -708,7 +714,7 @@ function showResult(kind) {
     ? t('share.goal', { score: total.toLocaleString(), rank })
     : t('share.out', { reach: reachText(rec), score: total.toLocaleString(), rank }));
   elResult.hidden = false; elClear.hidden = true;
-  root.classList.add('in-menu');
+  setMenu(true);
   resultReadyAt = performance.now() + 700;
   setTimeout(() => { if (state === 'result') document.getElementById('againBtn').focus({ preventScroll: true }); }, 50);
 }
@@ -1178,13 +1184,13 @@ function render() {
     else if (o.type === 's') drawStudent(o);
     else drawTeacher(o);
   }
-  for (const o of list) if (o !== bike && o.bubble) drawBubble(o);
+  if (!noHud) for (const o of list) if (o !== bike && o.bubble) drawBubble(o);
   drawParts();
   drawNearWall();
   if (isNight() && state !== 'title') drawNight();
-  drawPops();
+  if (!noHud) drawPops();
   ctx.restore();
-  if (state !== 'title') drawHUD();
+  if (state !== 'title' && !noHud) drawHUD();
   if (state === 'countdown') drawCountdown();
   if (state === 'crash' && crashT > 0.25) bigText(t('big.out'), '#e0333d', '#000', Math.min(1, (crashT - 0.25) * 4));
   if (state === 'goal') bigText(t('big.goal'), '#f2c14e', '#e0333d', Math.min(1, finishT * 4));
@@ -1793,5 +1799,5 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(paintSprit
 startDemo();
 requestAnimationFrame(frame);
 // テスト用の小さな窓口
-window.__roka = { get state() { return state; }, get glass() { return glass; }, get bike() { return bike; }, get ents() { return ents; }, get course() { return course; }, get lap() { return lap; }, get stageIdx() { return stageIdx; }, keys };
+window.__roka = { get state() { return state; }, get glass() { return glass; }, get bike() { return bike; }, get ents() { return ents; }, get course() { return course; }, get lap() { return lap; }, get stageIdx() { return stageIdx; }, set noHud(v) { noHud = v; }, keys };
 })();

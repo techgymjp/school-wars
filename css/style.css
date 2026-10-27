@@ -530,3 +530,14 @@ button.big:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; 
   }
   .coarse #title .legal { position: absolute; background: rgba(10,10,16,.65); padding: 2px 8px; }
 }
+
+/* バナー広告（アプリのメニュー画面だけ）。高さは js/ads.js が --banner-h に入れる。
+   画面の下に重なるので、そのぶん下の文字やボタンを持ち上げる */
+:root { --banner-h: 0px; }
+.overlay { padding-bottom: var(--banner-h); box-sizing: border-box; }
+#title .legal { bottom: calc(8px + var(--banner-h)); }
+.in-menu #mute { bottom: calc(8px + var(--banner-h)); }
+@media (orientation: landscape) and (max-height: 520px) {
+  .coarse #title .legal { bottom: calc(8px + var(--banner-h)); }
+  .coarse.in-menu #mute { bottom: calc(6px + var(--banner-h)); }
+}
