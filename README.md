@@ -142,7 +142,8 @@ npm run ios:release   # 本番の広告 ID でコピー（App Store 用）
 npm run ios:open      # Xcode で開く
 ```
 
-- GitHub Actions の「iOS build」は、署名なしでシミュレータ用にビルドできるかだけを確かめます。Mac の実行時間は料金が高いので、`ios/` やパッケージの設定を変えたときだけ動きます（手動でも実行できます）
+- GitHub Actions の「iOS release (TestFlight)」が、ゲームか iOS の設定を変えて push するたびに本番の広告設定でビルドし、App Store Connect（TestFlight）にアップロードします（ビルド番号は 100 + 実行回数）。Secrets は `docs/IOS_BUILD.md` の 8 章。審査への提出は App Store Connect で手で行います
+- 「iOS build check」（署名なしのシミュレータ向けビルド）は手動で実行するときだけ動きます
 - App Store 用の画像は `docs/store/ios/`（スクリーンショット 2622×1206 は `6.3inch/` に日英各 4 枚、ヘッダ 3840×1646、検索結果 3840×2560）
 - 審査では実機（iPhone）での操作の録画が必要です（`docs/IOS_BUILD.md` の 6 章）
 

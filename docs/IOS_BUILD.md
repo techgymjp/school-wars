@@ -170,9 +170,18 @@ base64 -i AuthKey_XXXXXXXXXX.p8 | tr -d '\n' | pbcopy
 
 登録画面は `https://github.com/techgymjp/<リポジトリ名>/settings/secrets/actions`（リポジトリの「Settings」→「Secrets and variables」→「Actions」→「New repository secret」）です。techgymjp は組織ではなく個人のアカウントなので、全リポジトリ共通の Secrets は使えません。**ほかのゲームでも、そのリポジトリに同じ 5 つを登録します**（.p12・.p8 のファイルとパスワードを保管しておけば、同じものを使い回せます）。
 
-### 8-4. そのあと
+### 8-4. そのあと（自動アップロード）
 
-登録が終わったら、Claude Code に「iOS の自動アップロードのワークフローを作って」と頼みます。push するたびに、本番広告の設定でビルドし、ビルド番号（Actions の実行回数）を自動で上げて、TestFlight にアップロードするようにします。審査への提出は、これまでどおり App Store Connect で行います。
+Secrets を登録すると、`.github/workflows/ios-release.yml` が動きます。ゲーム（`index.html`・`css/`・`js/`）か iOS の設定を変えて push するたびに、GitHub の Mac で次のことを行います（Actions の「iOS release (TestFlight)」から手動でも実行できます）。
+
+1. 本番の広告 ID でゲームのファイルをコピー（`npm run ios:release` と同じ）
+2. 証明書を読み込み、App Store 配布用のプロビジョニングプロファイルを Apple のサイトで用意（なければ自動で作る）
+3. ビルド番号を「100 + Actions の実行回数」にして Archive（Mac から手でアップロードした 1, 2, … と重ならない）。バージョンは `package.json` の `version`
+4. App Store Connect にアップロード。10〜30 分ほどで TestFlight に表示される
+
+審査への提出は、これまでどおり App Store Connect で行います（5 章）。ストアに出すバージョンを上げるときは `package.json` の `version` を上げます（例：1.0.1）。
+
+非公開のリポジトリでは Mac の実行時間を無料枠の 10 倍の速さで使うので、ゲームを何度も細かく直す日は、まとめて push すると節約になります。
 
 **注意**：証明書（.p12）、そのパスワード、API キー（.p8）は、アップロード鍵と同じく、チャット・AI へのアップロード・リポジトリへのコミットで**絶対に共有しない**でください。誤って共有したら、App Store Connect で API キーを取り消し、証明書も取り消して作り直します。
 

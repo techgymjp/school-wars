@@ -1,17 +1,9 @@
 name: iOS build check
 
 # iOS 版が Xcode でビルドできるかを確認する（署名なし・シミュレーター向け）。
-# App Store に出すビルドは、手元の Mac の Xcode で作る（docs/IOS_BUILD.md）
-# このリポジトリは非公開なので、Mac の実行時間は無料枠を 10 倍の速さで使う。
-# ゲームの画面（HTML / CSS / JS）だけの変更では Xcode のビルドは変わらないので、iOS の設定を変えたときだけ動かす
+# App Store に出すビルドは ios-release.yml（push で TestFlight へ自動アップロード）が作るので、
+# こちらは署名の問題と切り分けたいときなどに手動で動かす（Mac の実行時間を節約するため）
 on:
-  push:
-    paths:
-      - 'ios/**'
-      - 'package.json'
-      - 'package-lock.json'
-      - 'capacitor.config.json'
-      - '.github/workflows/ios.yml'
   workflow_dispatch:
 
 concurrency:
