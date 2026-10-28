@@ -83,7 +83,20 @@ jobs:
           if printf '%s' "$ASC_KEY_P8_BASE64" | grep -q 'BEGIN PRIVATE KEY'; then
             printf '%s\n' "$ASC_KEY_P8_BASE64" > "$P8"
           else
-            printf '%s' "$ASC_KEY_P8_BASE64" | tr -d ' \r\n\t' | base64 --decode > "$P8"
+            # ターミナルからコピーしたときに混じりがちな文字（行末の % など）を取り除いてから戻す。
+            # 中身はログに出さず、取り除いた文字の数と長さだけを表示する
+            python3 - "$P8" <<'EOF'
+          import base64, os, re, sys
+          raw = os.environ['ASC_KEY_P8_BASE64']
+          clean = re.sub(r'[^A-Za-z0-9+/=]', '', raw).rstrip('=')
+          print(f'ASC_KEY_P8_BASE64: {len(raw)} 文字のうち、base64 以外の文字 {len(raw) - len(re.sub(r"[^A-Za-z0-9+/=]", "", raw))} 個を除外')
+          clean += '=' * (-len(clean) % 4)
+          try:
+              data = base64.b64decode(clean)
+          except Exception as e:
+              sys.exit(f'::error::ASC_KEY_P8_BASE64 を base64 として読めません（{e}）')
+          open(sys.argv[1], 'wb').write(data)
+          EOF
           fi
           grep -q 'BEGIN PRIVATE KEY' "$P8" || { echo "::error::ASC_KEY_P8_BASE64 から .p8 の鍵を読み取れません。AuthKey_….p8 を base64 にした文字列を登録し直してください"; exit 1; }
           # fastlane 用（同じ鍵を JSON にしたもの）
