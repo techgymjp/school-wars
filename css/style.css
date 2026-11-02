@@ -341,6 +341,24 @@ button.big:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; 
   .coarse .lang-sel { margin-top: 8px; }
   .coarse .lang-btn { font-size: 12px; padding: 3px 10px; }
 }
+/* ストアへのリンク（Web 版だけ。アプリの中では出さない） */
+.store-links { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
+.store-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--f-body); font-size: 13px; font-weight: 700;
+  padding: 5px 12px;
+  border: 1px solid var(--line); border-radius: 999px;
+  color: var(--paper); background: rgba(10,10,16,.55);
+  text-decoration: none;
+}
+.store-link:hover { border-color: var(--gold); }
+.store-link:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.store-icon { color: #34a853; font-size: 11px; }
+.native .store-links { display: none; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .coarse .store-links { margin-top: 6px; }
+  .coarse .store-link { font-size: 12px; padding: 3px 10px; }
+}
 /* 英語のタイトルは日本語より横に長いので小さめにする */
 :root[lang="en"] h1 { font-size: clamp(36px, 4.8vw, 62px); }
 @media (orientation: landscape) and (max-height: 520px) {
