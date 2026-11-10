@@ -1799,5 +1799,7 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(paintSprit
 startDemo();
 requestAnimationFrame(frame);
 // テスト用の小さな窓口
+// web-only:start（テストと画像撮影用。アプリのビルドでは取り除く）
 window.__roka = { get state() { return state; }, get glass() { return glass; }, get bike() { return bike; }, get ents() { return ents; }, get course() { return course; }, get lap() { return lap; }, get stageIdx() { return stageIdx; }, set noHud(v) { noHud = v; }, keys };
+// web-only:end
 })();

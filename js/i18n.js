@@ -55,15 +55,19 @@ const I18N = (() => {
       'legal.privacy': 'プライバシーポリシー',
       'legal.adSettings': '広告の設定',
       'url.privacy': 'https://techgym.jp/privacy-policy/',
+      // web-only:start（Web 版だけ。アプリのビルドでは取り除く）
       'url.play': 'https://play.google.com/store/apps/details?id=jp.techgym.schoolwars&hl=ja',
       'store.play': 'Android アプリ（Google Play）',
+      // web-only:end
       'sound.on': '音：ON', 'sound.off': '音：OFF',
       'aria.game': 'ゲーム画面：学校の廊下',
       'tb.up': '奥へ', 'tb.down': '手前へ', 'tb.horn': 'パラリラ', 'tb.accel': 'ダッシュ',
       'rot.title': 'スマホを横にしてください',
       'rot.lead': '廊下爆走伝は横画面で遊ぶゲームです。画面の向きのロックを外して、横向きにしてください。',
       'rot.full': '全画面で横にする', 'rot.stay': '縦のまま遊ぶ',
+      // web-only:start
       'foot': 'ドラマ「スクール☆ウォーズ」の名場面をモチーフにしたファンメイドのゲームです。現実の廊下では走らないでください。',
+      // web-only:end
       'cont.eyebrow': '生徒を轢いてしまった',
       'cont.lead': '広告を見ると、その場から1回だけ走り直せます。',
       'cont.watch': '広告を見て続行', 'cont.giveUp': 'あきらめる',
@@ -158,15 +162,19 @@ const I18N = (() => {
       'legal.privacy': 'Privacy policy',
       'legal.adSettings': 'Ad settings',
       'url.privacy': 'https://techgym.jp/privacy-policy-en/',
+      // web-only:start（Web 版だけ。アプリのビルドでは取り除く）
       'url.play': 'https://play.google.com/store/apps/details?id=jp.techgym.schoolwars&hl=en',
       'store.play': 'Get it on Google Play (Android)',
+      // web-only:end
       'sound.on': 'Sound: ON', 'sound.off': 'Sound: OFF',
       'aria.game': 'Game screen: a school hallway',
       'tb.up': 'Far wall', 'tb.down': 'Near wall', 'tb.horn': 'HORN', 'tb.accel': 'DASH',
       'rot.title': 'Turn your phone sideways',
       'rot.lead': 'Hallway Rampage is played in landscape. Turn off rotation lock and turn your phone sideways.',
       'rot.full': 'Go full screen', 'rot.stay': 'Play in portrait',
+      // web-only:start
       'foot': 'A fan-made game inspired by a famous scene from the Japanese TV drama "School Wars". Please don\'t run in real hallways.',
+      // web-only:end
       'cont.eyebrow': 'You hit a student',
       'cont.lead': 'Watch an ad to get back on the bike once, right where you crashed.',
       'cont.watch': 'Watch ad to continue', 'cont.giveUp': 'Give up',

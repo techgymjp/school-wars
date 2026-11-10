@@ -52,6 +52,16 @@ Android 版は Google Play で公開中です：https://play.google.com/store/ap
 <meta name="share-url" content="https://techgym.jp/column/claude-code-game-school-wars/">
 ```
 
+## Web 版だけの部分
+
+Google Play へのリンク、テスト用の窓口（`window.__roka`）、ドラマ名の入った画面下の一文は Web 版だけに入れ、アプリには入れません。
+アプリの中で「隠す」のではなく、アプリ用のビルド（`npm run build:app`）で取り除きます（App Store の審査で「審査中に隠した機能」と見なされないため）。
+
+- 目印：HTML は `<!-- web-only -->` 〜 `<!-- /web-only -->`、JS は `// web-only:start` 〜 `// web-only:end`、CSS は `/* web-only:start */` 〜 `/* web-only:end */`
+- `scripts/build-web.js` が `APP_BUILD=1` のときに目印の範囲を取り除き、`play.google.com` などが残っていたらビルドを止めます
+- `android:sync` / `ios:sync` / `ios:release` と GitHub Actions は `build:app`、Web 版の公開（Vercel）は `npm run build` を使います
+- 端末・日付・地域などで機能を出し分けるコードは、アプリには入れないでください
+
 ## Web 版の公開（Vercel）
 
 `vercel.json` で、Vercel が `npm run build` を実行して `www/` を公開するよう設定しています（Android アプリに同梱するのと同じファイルです）。
