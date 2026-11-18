@@ -33,6 +33,11 @@
         </provider>
     </application>
 
+    <!-- 画面は横向きに固定しているが、縦・横の画面の機能は必須ではない
+         （screenOrientation を指定すると Google Play が必須と判断し、対応端末が狭まるのを防ぐ） -->
+    <uses-feature android:name="android.hardware.screen.landscape" android:required="false" />
+    <uses-feature android:name="android.hardware.screen.portrait" android:required="false" />
+
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
